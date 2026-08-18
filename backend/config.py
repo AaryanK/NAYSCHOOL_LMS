@@ -45,12 +45,15 @@ class Settings(BaseSettings):
 
     # Blackboard Settings
     BLACKBOARD_ENABLED: bool = False
+    # Deprecated compatibility fallback only. Blackboard origins are stored per connection.
     BLACKBOARD_BASE_URL: str | None = None
     BLACKBOARD_CLIENT_ID: str | None = None
     BLACKBOARD_CLIENT_SECRET: str | None = None
     BLACKBOARD_APP_ID: str | None = None
     BLACKBOARD_REDIRECT_URI: str = "http://127.0.0.1:8000/api/lms/blackboard/oauth/callback"
-    BLACKBOARD_SCOPES: str = "read"
+    BLACKBOARD_SCOPES: str = "read offline"
+    BLACKBOARD_OAUTH_STATE_TTL_MINUTES: int = 10
+    BLACKBOARD_HTTP_TIMEOUT_SECONDS: float = 15.0
 
     # Canvas Settings
     CANVAS_ENABLED: bool = False

@@ -90,7 +90,7 @@ const App = {
     return this.request(`/courses/${courseId}/assignments`);
   },
   async createAssignment(courseId, title, description, dueDate) {
-    return this.request(`/courses/${courseId}/assignments', {
+    return this.request(`/courses/${courseId}/assignments`, {
       method: 'POST',
       body: JSON.stringify({ title, description, due_date: dueDate })
     });
@@ -217,6 +217,9 @@ const App = {
   async getLMSSyncLogs(connectionId) {
     return this.request(`/lms/${connectionId}/sync-logs`);
   },
+  async probeLMSConnection(connectionId) {
+    return this.request(`/lms/${connectionId}/probe`);
+  },
 
   // Phase 5 Operations
   async getTopics(courseId) {
@@ -334,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDashboard();
   } else if (path.includes('course.html')) {
     initCourse();
-  } else if (path.includes('lms.html')) {
+  } else if (path.includes('lms.html') || path === '/lms') {
     initLMSPage();
   } else {
     initIndex();
@@ -1603,6 +1606,14 @@ async function initLMSPage() {
   
   await loadProviders();
   await loadConnections();
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('oauth') === 'success' && params.get('connection_id')) {
+    showAlert('Blackboard connected. Verifying the saved authorization…', 'success', 'lms-alert-container');
+    await probeLMSConnection(Number(params.get('connection_id')));
+  } else if (params.get('oauth') === 'error') {
+    showAlert(`Blackboard authorization failed: ${params.get('reason') || 'unknown error'}.`, 'danger', 'lms-alert-container');
+  }
+  if (params.has('oauth')) window.history.replaceState({}, '', '/lms');
 }
 
 async function loadProviders() {
@@ -1633,7 +1644,7 @@ async function loadProviders() {
             <strong>Setup Instructions:</strong>
             <ul style="margin-top: 0.25rem; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; list-style-type: disc;">
               <li>Enable in environment: set <code>${p.name.toUpperCase()}_ENABLED=true</code></li>
-              <li>Provide Developer Portal Key/Secrets: client ID, secret, and base URL</li>
+              <li>Provide the Developer Portal OAuth Key/client ID and OAuth Secret</li>
               <li>For Blackboard, ensure your App ID is approved in the university system</li>
             </ul>
           </div>
@@ -1697,6 +1708,7 @@ async function loadConnections() {
           
           <div style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
             <button onclick="triggerLMSSync(${c.id})" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem; cursor: pointer;">Sync Content</button>
+            <button onclick="probeLMSConnection(${c.id})" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem; cursor: pointer;">Verify Connection</button>
             <button onclick="viewSyncLogs(${c.id})" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem; cursor: pointer;">Sync Logs</button>
           </div>
         </div>
@@ -1726,6 +1738,23 @@ window.handleLMSConnect = async function(event, provider) {
     }
   } catch (err) {
     showAlert('Failed to link LMS: ' + err.message, 'danger', 'lms-alert-container');
+  }
+};
+
+window.probeLMSConnection = async function(connectionId) {
+  const container = document.getElementById('probe-status-box');
+  if (container) {
+    container.style.display = 'block';
+    container.textContent = 'Verifying the encrypted Blackboard authorization…';
+  }
+  try {
+    const result = await App.probeLMSConnection(connectionId);
+    if (container) {
+      container.innerHTML = `<strong>Blackboard connected</strong><br>Site: ${result.blackboard_site}<br>Authenticated user: ${result.authenticated_user_id}<br>API reachable: ${result.api_reachable ? 'Yes' : 'No'}<br>Token expires: ${result.token_expires_at ? new Date(result.token_expires_at).toLocaleString() : 'Not supplied'}`;
+    }
+  } catch (err) {
+    if (container) container.textContent = `Connection verification failed: ${err.message}`;
+    showAlert(`Blackboard verification failed: ${err.message}`, 'danger', 'lms-alert-container');
   }
 };
 
@@ -2162,4 +2191,3 @@ if (btnNewChat) {
     }
   });
 }
-

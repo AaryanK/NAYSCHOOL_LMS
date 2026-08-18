@@ -1,138 +1,99 @@
-import logging
+from urllib.parse import urlencode
+
 import httpx
-from typing import List
+
 from backend.config import settings
 from backend.lms.base import BaseLMSConnector
-from backend.lms.schemas import LMSCourse, LMSAssignment, LMSContentItem, LMSAnnouncement, LMSGradeItem
+from backend.lms.blackboard_client import BlackboardAPIError, normalize_blackboard_origin
 
-logger = logging.getLogger(__name__)
 
 class BlackboardConnector(BaseLMSConnector):
     provider_name = "blackboard"
+    authorization_path = "/learn/api/public/v1/oauth2/authorizationcode"
+    token_path = "/learn/api/public/v1/oauth2/token"
 
-    async def build_authorization_url(self, user_id: int) -> str:
-        if not settings.BLACKBOARD_ENABLED or not settings.BLACKBOARD_BASE_URL or not settings.BLACKBOARD_CLIENT_ID:
-            raise ValueError("Blackboard integration is not configured or enabled.")
-            
-        base_url = settings.BLACKBOARD_BASE_URL.rstrip("/")
-        # State encodes user_id to verify on callback
-        state = f"{user_id}:blackboard_auth"
-        redirect_uri = settings.BLACKBOARD_REDIRECT_URI
-        scopes = settings.BLACKBOARD_SCOPES or "read"
-        
-        # Standard Blackboard OAuth2 Authorization URL
-        auth_url = (
-            f"{base_url}/learn/api/v1/oauth2/authorizationcode"
-            f"?response_type=code"
-            f"&client_id={settings.BLACKBOARD_CLIENT_ID}"
-            f"&redirect_uri={redirect_uri}"
-            f"&scope={scopes}"
-            f"&state={state}"
-        )
-        return auth_url
+    def _require_oauth_config(self) -> None:
+        if not settings.BLACKBOARD_ENABLED:
+            raise ValueError("Blackboard integration is disabled.")
+        if not settings.BLACKBOARD_CLIENT_ID or not settings.BLACKBOARD_CLIENT_SECRET:
+            raise ValueError("Blackboard OAuth key/client ID and OAuth secret are required.")
 
-    async def exchange_code_for_token(self, code: str, state: str) -> dict:
-        if not settings.BLACKBOARD_BASE_URL or not settings.BLACKBOARD_CLIENT_ID or not settings.BLACKBOARD_CLIENT_SECRET:
-            raise ValueError("Blackboard environment configuration (base URL, client ID, or client secret) is missing.")
-            
-        base_url = settings.BLACKBOARD_BASE_URL.rstrip("/")
-        token_url = f"{base_url}/learn/api/v1/oauth2/token"
-        
-        data = {
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": settings.BLACKBOARD_REDIRECT_URI
+    async def build_authorization_url(self, base_url: str, state: str, code_challenge: str) -> str:
+        self._require_oauth_config()
+        origin = normalize_blackboard_origin(base_url)
+        params = {
+            "response_type": "code",
+            "client_id": settings.BLACKBOARD_CLIENT_ID,
+            "redirect_uri": settings.BLACKBOARD_REDIRECT_URI,
+            "scope": settings.BLACKBOARD_SCOPES or "read offline",
+            "state": state,
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
         }
-        
-        # Blackboard Learn OAuth2 uses basic authentication with client_id:client_secret
-        auth = (settings.BLACKBOARD_CLIENT_ID, settings.BLACKBOARD_CLIENT_SECRET)
-        
-        async with httpx.AsyncClient() as client:
-            response = await client.post(token_url, data=data, auth=auth)
-            if response.status_code != 200:
-                logger.error(f"Failed to exchange code for token: {response.text}")
-                raise RuntimeError(f"Blackboard OAuth exchange failed: {response.text}")
-            
-            return response.json()
+        return f"{origin}{self.authorization_path}?{urlencode(params)}"
 
-    async def refresh_access_token(self, refresh_token: str) -> dict:
-        if not settings.BLACKBOARD_BASE_URL or not settings.BLACKBOARD_CLIENT_ID or not settings.BLACKBOARD_CLIENT_SECRET:
-            raise ValueError("Blackboard environment configuration is missing.")
-            
-        base_url = settings.BLACKBOARD_BASE_URL.rstrip("/")
-        token_url = f"{base_url}/learn/api/v1/oauth2/token"
-        
-        data = {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token
-        }
-        auth = (settings.BLACKBOARD_CLIENT_ID, settings.BLACKBOARD_CLIENT_SECRET)
-        
-        async with httpx.AsyncClient() as client:
-            response = await client.post(token_url, data=data, auth=auth)
-            if response.status_code != 200:
-                raise RuntimeError(f"Blackboard OAuth refresh failed: {response.text}")
-            return response.json()
+    async def exchange_code_for_token(self, base_url: str, code: str, code_verifier: str) -> dict:
+        self._require_oauth_config()
+        origin = normalize_blackboard_origin(base_url)
+        try:
+            async with httpx.AsyncClient(timeout=settings.BLACKBOARD_HTTP_TIMEOUT_SECONDS) as client:
+                response = await client.post(
+                    f"{origin}{self.token_path}",
+                    data={
+                        "grant_type": "authorization_code",
+                        "code": code,
+                        "redirect_uri": settings.BLACKBOARD_REDIRECT_URI,
+                        "code_verifier": code_verifier,
+                    },
+                    auth=(settings.BLACKBOARD_CLIENT_ID, settings.BLACKBOARD_CLIENT_SECRET),
+                )
+        except httpx.TimeoutException as exc:
+            raise BlackboardAPIError("Blackboard authorization timed out.", 504) from exc
+        except httpx.HTTPError as exc:
+            raise BlackboardAPIError("Blackboard authorization service could not be reached.", 502) from exc
+        if response.status_code != 200:
+            raise BlackboardAPIError("Blackboard rejected the authorization code.", 400)
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise BlackboardAPIError("Blackboard returned a malformed token response.", 502) from exc
+        if not isinstance(payload, dict) or not payload.get("access_token"):
+            raise BlackboardAPIError("Blackboard token response did not contain an access token.", 502)
+        return payload
+
+    async def refresh_access_token(self, base_url: str, refresh_token: str) -> dict:
+        self._require_oauth_config()
+        origin = normalize_blackboard_origin(base_url)
+        try:
+            async with httpx.AsyncClient(timeout=settings.BLACKBOARD_HTTP_TIMEOUT_SECONDS) as client:
+                response = await client.post(
+                    f"{origin}{self.token_path}",
+                    data={"grant_type": "refresh_token", "refresh_token": refresh_token},
+                    auth=(settings.BLACKBOARD_CLIENT_ID, settings.BLACKBOARD_CLIENT_SECRET),
+                )
+        except httpx.HTTPError as exc:
+            raise BlackboardAPIError("Blackboard token refresh failed to reach the institution.", 502) from exc
+        if response.status_code != 200:
+            raise BlackboardAPIError("Blackboard rejected the refresh token.", 401)
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise BlackboardAPIError("Blackboard returned a malformed refresh response.", 502) from exc
+        if not isinstance(payload, dict) or not payload.get("access_token"):
+            raise BlackboardAPIError("Blackboard refresh response did not contain an access token.", 502)
+        return payload
 
     async def get_courses(self, connection) -> list:
-        # Check configuration
-        if not settings.BLACKBOARD_ENABLED or not settings.BLACKBOARD_BASE_URL:
-            logger.warning("Blackboard is disabled or not configured. Returning scaffolded courses.")
-            return [
-                LMSCourse(
-                    external_id="bb-course-101",
-                    name="Introduction to Computer Science (Blackboard Sync)",
-                    code="CS101",
-                    description="Scaffolded Blackboard course for local verification.",
-                    instructor="Dr. Alan Turing",
-                    raw={"scaffolded": True}
-                )
-            ]
-
-        # Real API call placeholder
-        # Standard route is GET /learn/api/v1/courses or user specific courses
-        # Return scaffolded details for now unless actively integrated
-        return [
-            LMSCourse(
-                external_id="bb-course-101",
-                name="Introduction to Computer Science (Blackboard Sync)",
-                code="CS101",
-                description="Scaffolded Blackboard course for local verification.",
-                instructor="Dr. Alan Turing",
-                raw={"scaffolded": True}
-            )
-        ]
+        raise BlackboardAPIError("Real Blackboard course sync is not implemented yet.", 501)
 
     async def get_assignments(self, connection, course_external_id: str) -> list:
-        if not settings.BLACKBOARD_ENABLED or not settings.BLACKBOARD_BASE_URL:
-            return [
-                LMSAssignment(
-                    external_id="bb-assign-1",
-                    course_external_id=course_external_id,
-                    title="Blackboard HW 1 - Big O notation",
-                    description="Analyze the time complexity of sorting algorithms.",
-                    due_date=None,
-                    points_possible=100.0,
-                    raw={"scaffolded": True}
-                )
-            ]
-        return [
-            LMSAssignment(
-                external_id="bb-assign-1",
-                course_external_id=course_external_id,
-                title="Blackboard HW 1 - Big O notation",
-                description="Analyze the time complexity of sorting algorithms.",
-                due_date=None,
-                points_possible=100.0,
-                raw={"scaffolded": True}
-            )
-        ]
+        raise BlackboardAPIError("Real Blackboard assignment sync is not implemented yet.", 501)
 
     async def get_course_content(self, connection, course_external_id: str) -> list:
-        return []
+        raise BlackboardAPIError("Blackboard content sync is not implemented yet.", 501)
 
     async def get_announcements(self, connection, course_external_id: str) -> list:
-        return []
+        raise BlackboardAPIError("Blackboard announcement sync is not implemented yet.", 501)
 
     async def get_grades(self, connection, course_external_id: str) -> list:
-        return []
+        raise BlackboardAPIError("Blackboard grade sync is not implemented yet.", 501)

@@ -1,173 +1,186 @@
-import os
+from datetime import datetime, timedelta
+from urllib.parse import parse_qs, urlparse
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from datetime import datetime
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-from backend.main import app
-from backend.database import Base, get_db
-from backend.models import Course, User, LMSConnection, LMSSyncLog, ExternalCourseMap, Assignment
-from backend.deps import get_current_user
 from backend.config import settings
+from backend.database import Base, get_db
+from backend.deps import get_current_user
+from backend.main import app
+from backend.models import LMSConnection, LMSOAuthState, User
+from backend.services.token_service import decrypt_token
+
 
 @pytest.fixture(name="db_session")
 def fixture_db_session():
-    db_file = "./test_temp_lms.db"
-    if os.path.exists(db_file):
-        try:
-            os.remove(db_file)
-        except Exception:
-            pass
-            
-    engine = create_engine(f"sqlite:///{db_file}", connect_args={"check_same_thread": False})
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    
-    original_close = db.close
-    db.close = lambda: None
-    
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    Base.metadata.create_all(engine)
+    db = sessionmaker(autocommit=False, autoflush=False, bind=engine)()
+    user = User(id=2, email="lms@nayschool.test", hashed_password="pw")
+    db.add(user)
+    db.commit()
     try:
         yield db
     finally:
-        original_close()
+        db.close()
         engine.dispose()
-        if os.path.exists(db_file):
-            try:
-                os.remove(db_file)
-            except Exception:
-                pass
+
 
 @pytest.fixture(name="client")
-def fixture_client(db_session):
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
+def fixture_client(db_session, monkeypatch):
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setattr(settings, "BLACKBOARD_ENABLED", True)
+    monkeypatch.setattr(settings, "BLACKBOARD_CLIENT_ID", "oauth-key")
+    monkeypatch.setattr(settings, "BLACKBOARD_CLIENT_SECRET", "oauth-secret")
+    monkeypatch.setattr(settings, "BLACKBOARD_SCOPES", "read offline")
 
-    mock_user = User(id=2, email="lms@nayschool.com", hashed_password="pw")
-    db_session.add(mock_user)
-    db_session.commit()
+    def override_get_db():
+        yield db_session
 
     def override_get_current_user():
-        return mock_user
+        return db_session.query(User).filter(User.id == 2).one()
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_current_user] = override_get_current_user
-    
-    with TestClient(app) as c:
-        yield c
-        
+    with TestClient(app) as test_client:
+        yield test_client
     app.dependency_overrides.clear()
 
-def test_get_lms_providers_endpoint(client):
-    resp = client.get("/api/lms/providers")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert "providers" in data
-    # Standard providers: blackboard, canvas
-    providers = {p["name"]: p for p in data["providers"]}
-    assert "blackboard" in providers
-    assert "canvas" in providers
 
-def test_get_lms_connections_empty(client):
-    resp = client.get("/api/lms/connections")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert isinstance(data, list)
-    assert len(data) == 0
+def start_oauth(client):
+    response = client.post("/api/lms/blackboard/connect", json={"school_domain": "learn.example.edu"})
+    assert response.status_code == 200
+    data = response.json()
+    state = parse_qs(urlparse(data["authorization_url"]).query)["state"][0]
+    return data, state
 
-def test_connect_provider_not_configured(client):
-    # If BLACKBOARD_ENABLED is False or URL is missing
-    settings.BLACKBOARD_ENABLED = False
-    resp = client.post("/api/lms/blackboard/connect", json={"school_domain": "blackboard.school.edu"})
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["status"] == "not_configured"
-    assert "not fully configured" in data["message"]
 
-def test_connect_provider_success(client):
-    # Set config values temporarily
-    settings.BLACKBOARD_ENABLED = True
-    settings.BLACKBOARD_BASE_URL = "https://blackboard.school.edu"
-    settings.BLACKBOARD_CLIENT_ID = "my-client-id"
-    settings.BLACKBOARD_CLIENT_SECRET = "my-client-secret"
-    
-    resp = client.post("/api/lms/blackboard/connect", json={"school_domain": "blackboard.school.edu"})
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["status"] == "configured"
-    assert "authorization_url" in data
-    assert "state=2:blackboard_auth" in data["authorization_url"]
+def test_connect_stores_unpredictable_hashed_state_and_pkce(client, db_session):
+    first, first_state = start_oauth(client)
+    second, second_state = start_oauth(client)
+    assert first_state != second_state
+    assert "2:blackboard_auth" not in first_state
+    assert first["connection_id"] == second["connection_id"]
+    rows = db_session.query(LMSOAuthState).all()
+    assert len(rows) == 2
+    assert all(row.state_hash not in {first_state, second_state} for row in rows)
+    assert len(decrypt_token(rows[0].code_verifier_encrypted)) >= 43
+    query = parse_qs(urlparse(first["authorization_url"]).query)
+    assert query["code_challenge_method"] == ["S256"]
 
-def test_sync_lms_not_configured(client, db_session):
-    # Pre-create connection record
-    conn = LMSConnection(
-        id=5,
-        user_id=2,
-        provider="blackboard",
-        school_domain="blackboard.school.edu",
-        status="disconnected"
+
+def test_connect_rejects_origin_with_path(client):
+    response = client.post("/api/lms/blackboard/connect", json={"school_domain": "https://learn.example.edu/evil"})
+    assert response.status_code == 422
+
+
+def test_callback_success_encrypts_token_and_calculates_expiry(client, db_session):
+    data, state = start_oauth(client)
+    before = datetime.utcnow()
+    token_payload = {
+        "access_token": "raw-access", "refresh_token": "raw-refresh", "expires_in": 1800,
+        "scope": "read offline", "user_id": "bb-user-7",
+    }
+    with patch(
+        "backend.lms.providers.blackboard.BlackboardConnector.exchange_code_for_token",
+        new=AsyncMock(return_value=token_payload),
+    ):
+        response = client.get(
+            f"/api/lms/blackboard/oauth/callback?code=abc&state={state}", follow_redirects=False
+        )
+    assert response.status_code == 303
+    assert response.headers["location"] == f"/lms?oauth=success&connection_id={data['connection_id']}"
+    connection = db_session.query(LMSConnection).filter(LMSConnection.id == data["connection_id"]).one()
+    transaction = db_session.query(LMSOAuthState).one()
+    assert connection.status == "connected"
+    assert connection.access_token_encrypted != "raw-access"
+    assert decrypt_token(connection.access_token_encrypted) == "raw-access"
+    assert connection.token_expires_at >= before + timedelta(seconds=1799)
+    assert transaction.consumed_at is not None
+
+
+def test_callback_invalid_state(client):
+    response = client.get(
+        "/api/lms/blackboard/oauth/callback?code=abc&state=invalid", follow_redirects=False
     )
-    db_session.add(conn)
+    assert response.headers["location"].endswith("oauth=error&reason=invalid_state")
+
+
+def test_callback_expired_state(client, db_session):
+    _, state = start_oauth(client)
+    row = db_session.query(LMSOAuthState).one()
+    row.expires_at = datetime.utcnow() - timedelta(seconds=1)
     db_session.commit()
-
-    settings.BLACKBOARD_ENABLED = False
-    resp = client.post("/api/lms/5/sync", json={"sync_courses": True, "sync_assignments": True})
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["status"] == "not_configured"
-    
-    # Verify sync log was created
-    log = db_session.query(LMSSyncLog).filter(LMSSyncLog.connection_id == 5).first()
-    assert log is not None
-    assert log.status == "not_configured"
-
-def test_sync_lms_success_mock(client, db_session):
-    # Pre-create connection record
-    conn = LMSConnection(
-        id=6,
-        user_id=2,
-        provider="blackboard",
-        school_domain="blackboard.school.edu",
-        status="disconnected"
+    response = client.get(
+        f"/api/lms/blackboard/oauth/callback?code=abc&state={state}", follow_redirects=False
     )
-    db_session.add(conn)
+    assert response.headers["location"].endswith("oauth=error&reason=state_expired")
+
+
+def test_callback_provider_mismatch(client, db_session):
+    _, state = start_oauth(client)
+    row = db_session.query(LMSOAuthState).one()
+    row.provider = "canvas"
     db_session.commit()
+    response = client.get(
+        f"/api/lms/blackboard/oauth/callback?code=abc&state={state}", follow_redirects=False
+    )
+    assert response.headers["location"].endswith("oauth=error&reason=provider_mismatch")
 
-    # Enabled but without actual API endpoint calls, Blackboard Connector will fall back to mock data!
-    settings.BLACKBOARD_ENABLED = True
-    settings.BLACKBOARD_BASE_URL = "https://blackboard.school.edu"
-    
-    resp = client.post("/api/lms/6/sync", json={"sync_courses": True, "sync_assignments": True})
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["status"] == "success"
-    assert data["synced_courses_count"] == 1
-    assert data["synced_assignments_count"] == 1
 
-    # Check course was created
-    c = db_session.query(Course).filter(Course.user_id == 2).first()
-    assert c is not None
-    assert "Introduction to Computer Science" in c.name
-    
-    # Check ExternalCourseMap
-    mapping = db_session.query(ExternalCourseMap).filter(ExternalCourseMap.lms_connection_id == 6).first()
-    assert mapping is not None
-    assert mapping.external_course_id == "bb-course-101"
-    
-    # Check Assignment
-    assign = db_session.query(Assignment).filter(Assignment.course_id == c.id).first()
-    assert assign is not None
-    assert assign.external_provider == "blackboard"
-    assert assign.external_id == "bb-assign-1"
-    assert "Big O notation" in assign.title
+def test_callback_state_is_one_time_use(client, db_session):
+    _, state = start_oauth(client)
+    token_payload = {"access_token": "a", "expires_in": 60, "user_id": "u"}
+    exchange = AsyncMock(return_value=token_payload)
+    with patch("backend.lms.providers.blackboard.BlackboardConnector.exchange_code_for_token", new=exchange):
+        first = client.get(f"/api/lms/blackboard/oauth/callback?code=one&state={state}", follow_redirects=False)
+        second = client.get(f"/api/lms/blackboard/oauth/callback?code=two&state={state}", follow_redirects=False)
+    assert "oauth=success" in first.headers["location"]
+    assert second.headers["location"].endswith("oauth=error&reason=state_already_used")
+    assert exchange.await_count == 1
 
-    # Check logs
-    logs_resp = client.get("/api/lms/6/sync-logs")
-    assert logs_resp.status_code == 200
-    logs_data = logs_resp.json()
-    assert len(logs_data) == 1
-    assert logs_data[0]["status"] == "success"
+
+def test_callback_handles_blackboard_oauth_error_without_echoing_description(client):
+    response = client.get(
+        "/api/lms/blackboard/oauth/callback?error=access_denied&error_description=contains-secret",
+        follow_redirects=False,
+    )
+    assert response.headers["location"].endswith("oauth=error&reason=authorization_denied")
+    assert "contains-secret" not in response.headers["location"]
+
+
+def test_authenticated_probe_is_sanitized(client, db_session):
+    connection = LMSConnection(
+        user_id=2, provider="blackboard", base_url="https://learn.example.edu", status="connected"
+    )
+    db_session.add(connection)
+    db_session.commit()
+    result = {
+        "provider": "blackboard", "connection_status": "connected",
+        "blackboard_site": "https://learn.example.edu", "authenticated_user_id": "bb-user",
+        "token_expires_at": None, "api_reachable": True,
+    }
+    with patch("backend.routers.lms.BlackboardClient.probe", new=AsyncMock(return_value=result)):
+        response = client.get(f"/api/lms/{connection.id}/probe")
+    assert response.status_code == 200
+    assert response.json() == result
+    assert "access_token" not in response.text.lower()
+    assert "refresh_token" not in response.text.lower()
+
+
+def test_sync_has_no_fake_success(client, db_session):
+    connection = LMSConnection(
+        user_id=2, provider="blackboard", base_url="https://learn.example.edu", status="connected"
+    )
+    db_session.add(connection)
+    db_session.commit()
+    response = client.post(f"/api/lms/{connection.id}/sync", json={})
+    assert response.status_code == 501
+    assert "not implemented" in response.json()["detail"]

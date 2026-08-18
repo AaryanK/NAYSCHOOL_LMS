@@ -152,6 +152,7 @@ class LMSConnection(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     provider = Column(String, default="blackboard")
     school_domain = Column(String, nullable=True)
+    base_url = Column(String, nullable=True)
     external_user_id = Column(String, nullable=True)
     access_token_encrypted = Column(Text, nullable=True)
     refresh_token_encrypted = Column(Text, nullable=True)
@@ -164,6 +165,20 @@ class LMSConnection(Base):
 
     # Relationships
     user = relationship("User", back_populates="lms_connections")
+
+class LMSOAuthState(Base):
+    __tablename__ = "lms_oauth_states"
+
+    id = Column(Integer, primary_key=True, index=True)
+    state_hash = Column(String, unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    provider = Column(String, nullable=False)
+    lms_connection_id = Column(Integer, ForeignKey("lms_connections.id", ondelete="CASCADE"), nullable=False)
+    code_verifier_encrypted = Column(Text, nullable=False)
+    return_path = Column(String, default="/lms", nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    consumed_at = Column(DateTime, nullable=True)
 
 class LMSSyncLog(Base):
     __tablename__ = "lms_sync_logs"
@@ -396,6 +411,5 @@ class UsageCounter(Base):
 
     # Relationships
     user = relationship("User", back_populates="usage_counters")
-
 
 

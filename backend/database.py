@@ -67,6 +67,7 @@ def init_db():
             existing_lms_columns = [row[1] for row in result_lms.fetchall()]
             
             lms_columns_to_add = [
+                ("base_url", "VARCHAR"),
                 ("external_user_id", "VARCHAR"),
                 ("token_expires_at", "DATETIME"),
                 ("scopes", "VARCHAR"),
