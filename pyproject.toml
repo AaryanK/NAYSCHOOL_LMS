@@ -1,0 +1,37 @@
+[project]
+name = "nayschool"
+version = "3.0.0"
+description = "NaySchool 3.0: AI-powered education platform and learning operating system"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy",
+    "alembic",
+    "pydantic",
+    "pydantic-settings",
+    "python-dotenv",
+    "python-multipart",
+    "passlib[bcrypt]",
+    "bcrypt",
+    "python-jose[cryptography]",
+    "httpx",
+    "aiofiles",
+    "email-validator",
+    "pypdf",
+    "numpy",
+    "python-docx",
+    "python-pptx",
+    "psycopg[binary]",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+

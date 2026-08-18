@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications & Reminders | NaySchool 3.0</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .notif-container {
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+    .notif-list {
+      margin-top: 1.5rem;
+    }
+    .notif-item {
+      padding: 1.25rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      transition: var(--transition-smooth);
+    }
+    .notif-item.read {
+      opacity: 0.6;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+    .notif-item.unread {
+      border-left: 4px solid #6366f1;
+    }
+    .notif-content {
+      flex: 1;
+    }
+    .notif-title {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .notif-badge {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .notif-badge.assignment { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+    .notif-badge.study_task { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+    .notif-badge.exam { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); }
+    .notif-badge.system { background: rgba(255, 255, 255, 0.1); color: var(--text-gray); }
+
+    .notif-time {
+      font-size: 0.75rem;
+      color: var(--text-dark);
+      margin-top: 0.5rem;
+    }
+    .notif-btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      margin-left: 1rem;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-gray);
+      background: var(--bg-card);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--border-radius-lg);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">
+        <div class="logo-icon">N</div>
+        <span>NaySchool 3.0</span>
+      </a>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-link">Home</a>
+        <a href="lms.html" class="nav-link">LMS Sync</a>
+        <a href="pricing.html" class="nav-link">Pricing</a>
+        <a href="notifications.html" class="nav-link active">Notifications</a>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="notif-container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+          <h1 class="text-gradient" style="font-size: 2.2rem;">Notifications & Reminders</h1>
+          <p style="color: var(--text-gray);">Stay updated on assignments, study tasks, and exam preps.</p>
+        </div>
+      </div>
+
+      <div id="notifications-alert-container"></div>
+      
+      <div id="notifications-list" class="notif-list">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 NaySchool 3.0. Built for student productivity.</p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const token = localStorage.getItem("nayschool_token");
+      if (!token) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      // Logout handler
+      document.getElementById("logout-btn").addEventListener("click", () => {
+        localStorage.removeItem("token");
+        window.location.href = "index.html";
+      });
+
+      async function fetchNotifications() {
+        try {
+          const res = await fetch("/api/notifications", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const notifs = await res.json();
+            renderNotifications(notifs);
+          } else {
+            showError("Failed to fetch notifications.");
+          }
+        } catch (e) {
+          showError(`Network error: ${e.message}`);
+        }
+      }
+
+      function renderNotifications(notifs) {
+        const list = document.getElementById("notifications-list");
+        if (notifs.length === 0) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <h3 style="margin-bottom: 0.5rem; color: var(--text-white);">All Caught Up!</h3>
+              <p>You have no pending notifications or reminders. Check back later!</p>
+            </div>
+          `;
+          return;
+        }
+
+        list.innerHTML = notifs.map(n => {
+          const isRead = n.read_at !== null;
+          const readClass = isRead ? "read" : "unread";
+          const dateStr = new Date(n.created_at).toLocaleString();
+          
+          return `
+            <div class="notif-item ${readClass}" id="notif-${n.id}">
+              <div class="notif-content">
+                <div class="notif-title">
+                  <span class="notif-badge ${n.notification_type}">${n.notification_type.replace('_', ' ')}</span>
+                  <span>${n.title}</span>
+                </div>
+                <p style="color: var(--text-white); margin-top: 0.5rem;">${n.message}</p>
+                <div class="notif-time">${dateStr}</div>
+              </div>
+              <div style="display: flex; align-items: center;">
+                ${n.course_id ? `<a href="course.html?id=${n.course_id}" class="btn btn-secondary notif-btn">Go to Course</a>` : ''}
+                ${!isRead ? `<button class="btn btn-primary notif-btn mark-read-btn" data-id="${n.id}">Mark Read</button>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Attach listeners for mark read
+        document.querySelectorAll(".mark-read-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const id = btn.dataset.id;
+            try {
+              const res = await fetch(`/api/notifications/${id}/read`, {
+                method: "PATCH",
+                headers: { "Authorization": `Bearer ${token}` }
+              });
+              if (res.ok) {
+                // Update UI without full refresh
+                const item = document.getElementById(`notif-${id}`);
+                if (item) {
+                  item.classList.remove("unread");
+                  item.classList.add("read");
+                }
+                btn.remove();
+              } else {
+                showError("Could not mark notification as read.");
+              }
+            } catch (e) {
+              showError(`Network error: ${e.message}`);
+            }
+          });
+        });
+      }
+
+      function showError(msg) {
+        document.getElementById("notifications-alert-container").innerHTML = `
+          <div class="alert alert-danger">${msg}</div>
+        `;
+      }
+
+      fetchNotifications();
+    });
+  </script>
+</body>
+</html>

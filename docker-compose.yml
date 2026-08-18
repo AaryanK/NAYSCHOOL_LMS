@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: nayschool_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: nayschool
+      POSTGRES_PASSWORD: nayschool
+      POSTGRES_DB: nayschool
+    ports:
+      - "5432:5432"
+    volumes:
+      - nayschool_pgdata:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: nayschool_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+volumes:
+  nayschool_pgdata:

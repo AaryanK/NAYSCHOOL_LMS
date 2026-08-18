@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Home | NaySchool 3.0</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Student Dashboard Additions */
+    .welcome-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      padding: 2.5rem;
+      border-radius: var(--border-radius-lg);
+      margin-bottom: 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .welcome-card::after {
+      content: "";
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+      top: -100px;
+      right: -100px;
+      z-index: 0;
+    }
+    .streak-container {
+      background: rgba(10, 14, 23, 0.6);
+      border: 1px solid var(--border-color);
+      padding: 1rem 1.5rem;
+      border-radius: var(--border-radius-md);
+      text-align: center;
+      z-index: 1;
+      min-width: 150px;
+    }
+    .streak-number {
+      font-size: 2.5rem;
+      font-family: var(--font-heading);
+      font-weight: 800;
+      color: #fbbf24;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+    .streak-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-gray);
+      letter-spacing: 0.05em;
+    }
+    .action-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+    }
+    @media (max-width: 1024px) {
+      .action-grid {
+        grid-template-columns: 1fr;
+      }
+      .welcome-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+      }
+      .streak-container {
+        width: 100%;
+      }
+    }
+    .empty-state-card {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: var(--text-gray);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--border-radius-md);
+      background: rgba(15, 22, 36, 0.3);
+      margin-bottom: 1.5rem;
+    }
+    .list-container {
+      margin-bottom: 2rem;
+    }
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    .list-header h3 {
+      font-size: 1.25rem;
+      color: var(--text-white);
+    }
+    .agenda-item, .weak-item, .chat-session-item {
+      padding: 1rem;
+      background: rgba(10, 14, 23, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition-smooth);
+    }
+    .agenda-item:hover, .weak-item:hover, .chat-session-item:hover {
+      border-color: var(--border-hover);
+      background: rgba(22, 32, 54, 0.4);
+    }
+    .action-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .action-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      color: var(--text-white);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: var(--transition-smooth);
+      cursor: pointer;
+    }
+    .action-pill:hover {
+      border-color: var(--border-hover);
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--text-white);
+    }
+    .action-pill.primary {
+      background: var(--gradient-primary);
+      border: none;
+    }
+    .action-pill.primary:hover {
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+    .course-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">
+        <div class="logo-icon">N</div>
+        <span>NaySchool 3.0</span>
+      </a>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-link active">Home</a>
+        <a href="lms.html" class="nav-link">LMS Sync</a>
+        <a href="pricing.html" class="nav-link">Pricing</a>
+        <a href="notifications.html" class="nav-link" id="nav-notif-link">Notifications <span class="badge" id="nav-notif-badge" style="display: none; background: #ef4444; color: white; padding: 0.1rem 0.4rem; font-size: 0.65rem; border: none; margin-left: 0.25rem;">0</span></a>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Auth forms section -->
+    <div id="auth-section" style="display: none;">
+      <div id="auth-alert-container"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h2 style="margin-bottom: 1.5rem;">Access Your Workspace</h2>
+          <form id="login-form">
+            <div class="form-group">
+              <label class="form-label" for="login-email">Email Address</label>
+              <input type="email" id="login-email" class="form-control" placeholder="name@school.edu" required autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="login-password">Password</label>
+              <input type="password" id="login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Login</button>
+          </form>
+        </div>
+        <div class="card">
+          <h2 style="margin-bottom: 1.5rem;">Create Account</h2>
+          <form id="register-form">
+            <div class="form-group">
+              <label class="form-label" for="reg-name">Full Name</label>
+              <input type="text" id="reg-name" class="form-control" placeholder="Dr. Alan Turing" required autocomplete="name">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="reg-email">Email Address</label>
+              <input type="email" id="reg-email" class="form-control" placeholder="name@school.edu" required autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="reg-password">Password</label>
+              <input type="password" id="reg-password" class="form-control" placeholder="••••••••" required autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">Register</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Home App section -->
+    <div id="app-section" style="display: none;">
+      <div id="dashboard-alert-container"></div>
+
+      <!-- Welcome Banner Card -->
+      <div class="welcome-card" id="welcome-card">
+        <div style="z-index: 1;">
+          <h2 style="font-size: 2.2rem; margin-bottom: 0.5rem;">Welcome back, <span id="student-name" class="text-gradient">Student</span>!</h2>
+          <p style="color: var(--text-white); font-weight: 500;" id="onboarding-summary">Study styles and education level customizable in your profile.</p>
+          <div style="margin-top: 1rem;" id="recommendations-container">
+            <!-- Dynamic Actions Recommendation banner -->
+          </div>
+        </div>
+        
+        <div class="streak-container">
+          <div class="streak-number" id="streak-days">0</div>
+          <div class="streak-label">Study Streak 🔥</div>
+        </div>
+      </div>
+
+      <!-- Main action columns -->
+      <div class="action-grid">
+        <!-- Left Side: Today's agenda & courses -->
+        <div>
+          <!-- Quick recommendations / action cards -->
+          <div class="list-container">
+            <div class="list-header">
+              <h3>Today's Agenda</h3>
+              <span class="badge badge-allowed" id="agenda-count">0 tasks</span>
+            </div>
+            <div id="agenda-list">
+              <!-- Tasks due today -->
+            </div>
+          </div>
+
+          <div class="list-container">
+            <div class="list-header">
+              <h3>Due Soon (Next 7 Days)</h3>
+              <span class="badge badge-caution" id="due-count">0 assignments</span>
+            </div>
+            <div id="due-soon-list">
+              <!-- Assignments due soon -->
+            </div>
+          </div>
+
+          <!-- Enrolled Courses -->
+          <div style="margin-top: 3rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.75rem;">My Courses</h2>
+            <button class="btn btn-primary" id="btn-show-add-course" style="padding: 0.5rem 1rem; font-size: 0.85rem;">+ Add Course</button>
+          </div>
+          
+          <div id="courses-list" class="course-card-grid">
+            <!-- Loaded dynamically -->
+          </div>
+
+          <!-- Add Course Section hidden by default, toggled via button -->
+          <div class="card" id="add-course-container" style="display: none; margin-top: 2rem; max-width: 600px;">
+            <h3 style="margin-bottom: 1.5rem;">Add a New Course</h3>
+            <form id="create-course-form">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="course-name">Course Name</label>
+                  <input type="text" id="course-name" class="form-control" placeholder="Intro to Algorithms" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="course-code">Course Code</label>
+                  <input type="text" id="course-code" class="form-control" placeholder="CS 301" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="course-instructor">Instructor</label>
+                <input type="text" id="course-instructor" class="form-control" placeholder="Professor Turing" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="course-desc">Course Description</label>
+                <textarea id="course-desc" class="form-control" placeholder="Detailed explanation of algorithms, complexity analyses, and computational data structures." rows="3"></textarea>
+              </div>
+              <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary">Add Course</button>
+                <button type="button" class="btn btn-secondary" id="btn-cancel-add-course">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Side: Weak topics, recent chats & actions -->
+        <div>
+          <div class="list-container">
+            <div class="list-header">
+              <h3>Weak Topics</h3>
+            </div>
+            <div id="weak-topics-list">
+              <!-- Weak topics list -->
+            </div>
+          </div>
+
+          <div class="list-container">
+            <div class="list-header">
+              <h3>Continue Tutor Conversations</h3>
+            </div>
+            <div id="recent-chats-list">
+              <!-- Recent chat sessions -->
+            </div>
+          </div>
+
+          <!-- Quick action cards -->
+          <div class="card" style="padding: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Quick Actions</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <a href="lms.html" class="btn btn-secondary" style="width: 100%; text-align: left; justify-content: flex-start;">Sync LMS Connections</a>
+              <a href="pricing.html" class="btn btn-secondary" style="width: 100%; text-align: left; justify-content: flex-start;">Upgrade Account Plan</a>
+              <a href="notifications.html" class="btn btn-secondary" style="width: 100%; text-align: left; justify-content: flex-start;">View Notifications</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 NaySchool 3.0. Built for student-first productivity.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

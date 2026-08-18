@@ -1,0 +1,858 @@
+You are AGY, my autonomous coding agent.
+
+We are inside the existing NaySchool 3.0 project directory:
+
+C:\MY_CODES\NAYSCHOOL_3.0
+
+The current project already has a working FastAPI + uv foundation with:
+
+* Frontend landing page
+* FastAPI backend
+* Swagger docs at /docs
+* JWT authentication
+* Courses
+* Assignments
+* File uploads
+* Tutor endpoint
+* Exam prep endpoint
+* Flashcards endpoint
+* Blackboard scaffold
+* AI provider layer for Ollama, OpenRouter, and DeepSeek
+* AGY agent skeletons
+* Basic tests
+
+Your job now is to upgrade the existing platform into a **course-aware AI tutor** by adding:
+
+1. Correct Ollama Cloud support
+2. Course material parsing
+3. Document chunks
+4. Simple RAG retrieval
+5. Course-context-aware tutor prompts
+6. Search endpoints
+7. Frontend support for course material search
+8. Tests and documentation updates
+
+Do not rebuild the whole project from scratch. Modify and extend the existing code carefully. Preserve working functionality.
+
+============================================================
+PHASE 1 — FIRST INSPECT THE EXISTING PROJECT
+============================================
+
+Before writing code:
+
+1. Inspect the current project tree.
+
+2. Inspect:
+
+   * backend/config.py
+   * backend/main.py
+   * backend/database.py
+   * backend/models.py
+   * backend/schemas.py
+   * backend/ai/llm_router.py
+   * backend/ai/providers/ollama_provider.py
+   * backend/ai/providers/openrouter_provider.py
+   * backend/ai/providers/deepseek_provider.py
+   * backend/routers/uploads.py
+   * backend/routers/tutor.py
+   * backend/services/file_service.py
+   * agy/homework_tutor_agent.py
+   * agy/integrity_agent.py
+   * frontend/course.html
+   * frontend/app.js
+   * README.md
+   * docs/AI_PROVIDER_PLAN.md
+   * docs/ARCHITECTURE.md
+
+3. Understand existing import style before changing files.
+
+4. Do not create duplicate routers or duplicate models.
+
+5. Avoid breaking existing endpoints.
+
+6. Keep all current tests passing.
+
+After inspection, proceed with the upgrade.
+
+============================================================
+PHASE 2 — FIX OLLAMA CLOUD SUPPORT
+==================================
+
+The current system may treat Ollama as local-only. That is incomplete.
+
+NaySchool must support both:
+
+A. Local Ollama:
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_API_KEY=
+
+B. Ollama Cloud:
+OLLAMA_BASE_URL=https://ollama.com
+OLLAMA_API_KEY=<user_key>
+
+Update configuration so `.env.example` includes:
+
+APP_NAME="NaySchool 3.0"
+APP_ENV=development
+APP_DEBUG=true
+DATABASE_URL=sqlite:///./nayschool.db
+SECRET_KEY=change-this-secret-key
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
+
+DEFAULT_AI_PROVIDER=auto
+ALLOW_CLOUD_AI=true
+
+OLLAMA_API_KEY=
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_DEFAULT_MODEL=llama3.2
+
+OPENROUTER_API_KEY=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_DEFAULT_MODEL=deepseek/deepseek-chat
+
+DEEPSEEK_API_KEY=
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_DEFAULT_MODEL=deepseek-chat
+
+CORS_ORIGINS=[http://127.0.0.1:8000,http://localhost:8000](http://127.0.0.1:8000,http://localhost:8000)
+
+Important:
+
+* Do NOT create a real `.env` file with keys.
+* Do NOT hardcode API keys.
+* Ensure `.env` is in `.gitignore`.
+* Ensure `.env.example` has blank placeholders only.
+
+Update `backend/config.py`:
+
+* Add OLLAMA_API_KEY if not already present.
+* Ensure pydantic-settings reads it properly.
+* Keep existing settings compatible.
+
+Update `backend/ai/providers/ollama_provider.py`:
+
+Behavior:
+
+* Always call:
+  {OLLAMA_BASE_URL}/api/chat
+
+* If OLLAMA_API_KEY exists and is not empty, send:
+  Authorization: Bearer <OLLAMA_API_KEY>
+
+* If OLLAMA_API_KEY is empty, send no Authorization header.
+
+* Use:
+  stream=false
+
+* Use async httpx.
+
+* Add timeout handling.
+
+* Return normalized response:
+
+{
+"provider": "ollama",
+"model": "...",
+"content": "...",
+"raw": {...}
+}
+
+Update `/api/ai/health`:
+
+It should report something like:
+
+{
+"providers": {
+"ollama": {
+"configured": true,
+"base_url": "...",
+"mode": "local" or "cloud",
+"api_key_present": true or false
+},
+"openrouter": {...},
+"deepseek": {...}
+}
+}
+
+Do not expose actual key values.
+
+Update README.md and docs/AI_PROVIDER_PLAN.md:
+
+* Say local Ollama requires no key.
+* Say Ollama Cloud uses OLLAMA_API_KEY.
+* Give both examples.
+
+============================================================
+PHASE 3 — ADD DOCUMENT CHUNKS FOR COURSE MATERIALS
+==================================================
+
+NaySchool currently supports file upload, but it needs course memory.
+
+Add a new SQLAlchemy model:
+
+DocumentChunk:
+
+* id: int primary key
+* course_file_id: foreign key to CourseFile
+* course_id: foreign key to Course
+* chunk_index: int
+* content: text
+* created_at: datetime
+
+Relationships:
+
+* CourseFile should have chunks relationship if appropriate.
+* Course should have document_chunks relationship if appropriate.
+
+Since this is local MVP, use SQLAlchemy metadata auto-create on startup like the existing app already does.
+
+Update schemas.py:
+
+Add:
+
+DocumentChunkResponse:
+
+* id
+* course_file_id
+* course_id
+* chunk_index
+* content
+* created_at
+
+CourseSearchRequest:
+
+* query: str
+
+CourseSearchResult:
+
+* chunk_id
+* course_file_id
+* score
+* content
+
+CourseSearchResponse:
+
+* results: list[CourseSearchResult]
+
+If the project uses separate schema files, follow the existing style instead of forcing everything into one file.
+
+============================================================
+PHASE 4 — ADD FILE TEXT EXTRACTION
+==================================
+
+Update pyproject.toml:
+
+Add:
+
+* pypdf
+
+Then use:
+
+uv sync
+
+Supported extraction in this phase:
+
+1. .txt
+2. .md
+3. .pdf using pypdf
+
+For unsupported files:
+
+* Save the file normally.
+* Store metadata normally.
+* Return chunk_count = 0.
+* Add a friendly message:
+  “File uploaded, but text extraction is not supported yet for this file type.”
+
+Supported later, but not now:
+
+* .docx
+* .pptx
+* images OCR
+
+Add TODOs for them.
+
+Create or update a file parsing service.
+
+Recommended file:
+
+backend/services/document_service.py
+
+Functions:
+
+extract_text_from_file(file_path: str, file_type: str) -> str
+
+Behavior:
+
+* For .txt and .md:
+  Read text using utf-8.
+  If utf-8 fails, fallback to errors="ignore".
+
+* For .pdf:
+  Use pypdf.PdfReader.
+  Extract text page by page.
+  Join pages with page markers or newlines.
+  Handle empty PDFs cleanly.
+
+* For unsupported:
+  Return empty string.
+
+Also add:
+
+chunk_text(text: str, max_chars: int = 1000, overlap: int = 150) -> list[str]
+
+Chunking behavior:
+
+* Clean whitespace.
+* Keep chunks roughly 800–1200 characters.
+* Use overlap so context is not lost.
+* Do not create empty chunks.
+* Limit extremely huge files for now if needed.
+* Add TODO for production-grade chunking later.
+
+Also add:
+
+create_chunks_for_course_file(db, course_file, text) -> int
+
+Behavior:
+
+* Delete old chunks for that file if reprocessing.
+* Insert chunks with chunk_index.
+* Commit.
+* Return number of chunks created.
+
+============================================================
+PHASE 5 — UPDATE FILE UPLOAD PIPELINE
+=====================================
+
+Update upload route/service so that when a file is uploaded:
+
+1. Verify course belongs to current user.
+2. Sanitize filename.
+3. Save the file under:
+   backend/storage/uploads/{course_id}/
+4. Store CourseFile metadata.
+5. Extract text if supported.
+6. Chunk text.
+7. Store DocumentChunk rows.
+8. Return CourseFile response plus chunk count.
+
+If the existing CourseFileResponse schema does not include chunk_count, add either:
+
+Option A:
+Add chunk_count to CourseFileResponse.
+
+Option B:
+Return an upload-specific response:
+
+CourseFileUploadResponse:
+
+* id
+* course_id
+* filename
+* original_filename
+* file_type
+* uploaded_at
+* chunk_count
+* extraction_status
+* message
+
+Prefer Option B if it avoids breaking existing schemas.
+
+Accepted extensions:
+
+* .pdf
+* .txt
+* .md
+* .docx
+* .pptx
+* .png
+* .jpg
+* .jpeg
+
+But extraction only for:
+
+* .pdf
+* .txt
+* .md
+
+Security:
+
+* Prevent path traversal.
+* Do not allow filenames like ../../secret.txt
+* Use safe sanitized filenames.
+* Keep original_filename separately.
+* Do not execute uploaded files.
+
+============================================================
+PHASE 6 — ADD SIMPLE COURSE SEARCH
+==================================
+
+Do not add vector database yet.
+
+Implement simple keyword retrieval first.
+
+Create service:
+
+backend/services/search_service.py
+
+Function:
+
+search_course_chunks(db, course_id: int, query: str, limit: int = 5) -> list[dict]
+
+Search behavior:
+
+1. Lowercase query.
+2. Split query into terms.
+3. Ignore tiny/common terms if easy.
+4. Load chunks for the course.
+5. Score each chunk:
+
+   * +1 for each term occurrence
+   * More points if exact query phrase appears
+6. Sort descending by score.
+7. Return top 5 nonzero results.
+8. If nothing scores, return empty list.
+
+Output item:
+
+{
+"chunk_id": ...,
+"course_file_id": ...,
+"score": ...,
+"content": "..."
+}
+
+Keep it simple but clean.
+
+Add endpoint:
+
+POST /api/courses/{course_id}/search
+
+Input:
+
+{
+"query": "..."
+}
+
+Output:
+
+{
+"results": [...]
+}
+
+Requirements:
+
+* Must require authentication.
+* Must verify course belongs to current user.
+* Must not search other users’ courses.
+
+Add endpoint:
+
+GET /api/courses/{course_id}/chunks
+
+Output:
+
+List of chunks for debugging.
+
+Requirements:
+
+* Must require authentication.
+* Must verify course belongs to current user.
+* Return chunk id, file id, index, content preview or full content.
+* If returning full content is too large, return first 500 characters and length.
+
+============================================================
+PHASE 7 — MAKE TUTOR COURSE-AWARE
+=================================
+
+Update tutor flow:
+
+Endpoint:
+
+POST /api/courses/{course_id}/tutor/ask
+
+Input should remain compatible with existing schema, but support:
+
+{
+"question": "...",
+"provider": "auto",
+"model": null,
+"temperature": 0.3
+}
+
+Process:
+
+1. Verify authenticated user.
+2. Verify course belongs to user.
+3. Run IntegrityAgent.
+4. If blocked:
+   Return safe tutoring alternative. Do not call LLM.
+5. If allowed or caution:
+   Search course chunks using the user question.
+6. Get top 5 course chunks.
+7. Pass chunks to HomeworkTutorAgent.
+8. HomeworkTutorAgent should include the chunks in the LLM prompt.
+9. Save chat message/session if the current project already does this.
+10. Return structured response.
+
+Update TutorAskResponse if needed:
+
+{
+"integrity": {...},
+"context_used": true or false,
+"retrieved_chunks": [
+{
+"chunk_id": 1,
+"course_file_id": 1,
+"score": 4,
+"content": "..."
+}
+],
+"tutor_response": {...}
+}
+
+If this breaks existing schema too much, add fields in a backward-compatible way.
+
+============================================================
+PHASE 8 — UPDATE HOMEWORK TUTOR AGENT PROMPT
+============================================
+
+Update agy/homework_tutor_agent.py.
+
+The tutor system prompt should behave like this:
+
+“You are NaySchool Tutor, a course-aware AI tutor. Your job is to teach, not just give answers. Use the provided course context when relevant. If course context is provided, base the explanation primarily on that context. If the context is insufficient, say so clearly and then explain generally. Do not help with cheating, live exams, bypassing proctoring, or submitting work dishonestly. Prefer guided reasoning, hints, conceptual explanations, and practice.”
+
+When context chunks exist, format them in the prompt:
+
+COURSE CONTEXT:
+[Chunk 1 | score=... | file_id=...]
+...
+[Chunk 2 | score=... | file_id=...]
+...
+
+STUDENT QUESTION:
+...
+
+Tutor response should include:
+
+* Whether course context was used
+* Concept explanation
+* Guided steps
+* Follow-up question
+* Similar practice suggestion if helpful
+* Academic integrity note
+
+Normalize output:
+
+{
+"mode": "guided_help",
+"provider_used": "...",
+"model_used": "...",
+"context_used": true,
+"answer": "...",
+"steps": [],
+"follow_up_question": "...",
+"integrity_note": "This is tutoring support, not direct cheating."
+}
+
+If LLM call fails:
+
+* Return a graceful fallback response.
+* Do not crash endpoint.
+* Include provider error in a safe debug field if already consistent with project style.
+
+============================================================
+PHASE 9 — UPDATE FRONTEND COURSE PAGE
+=====================================
+
+Update frontend/course.html and frontend/app.js.
+
+The course page should show:
+
+1. Course details.
+2. Upload file section.
+3. Uploaded files list.
+4. Assignment section.
+5. AI tutor section.
+6. Provider dropdown:
+
+   * auto
+   * ollama
+   * openrouter
+   * deepseek
+7. Course material search section.
+8. Exam prep section.
+9. Flashcards section.
+
+Upload UI:
+
+After uploading a file, show:
+
+* filename
+* file type
+* upload success
+* chunk count
+* extraction status
+
+Search UI:
+
+Add:
+
+* input box: “Search your course materials”
+* button: Search
+* result cards showing:
+
+  * score
+  * file id
+  * chunk preview
+
+Tutor UI:
+
+When tutor response returns, show:
+
+* answer
+* steps
+* context_used: yes/no
+* retrieved chunks preview
+* provider/model used
+* integrity classification
+
+Do not make the frontend overly complex. Keep it clean.
+
+Maintain the dark NaySchool visual style:
+
+* Deep navy/black background
+* Blue/purple accents
+* Rounded cards
+* Clean forms
+* Responsive layout
+
+============================================================
+PHASE 10 — UPDATE DOCUMENTATION
+===============================
+
+Update README.md:
+
+Add:
+
+* Ollama local vs Ollama Cloud setup
+* How to set OLLAMA_API_KEY
+* How to upload files
+* Supported file extraction types
+* How simple RAG works
+* How to test course-aware tutor
+* New endpoints:
+
+  * GET /api/courses/{course_id}/chunks
+  * POST /api/courses/{course_id}/search
+
+Update docs/AI_PROVIDER_PLAN.md:
+
+Include:
+
+* Local Ollama:
+
+  * no key
+  * http://localhost:11434
+* Ollama Cloud:
+
+  * OLLAMA_API_KEY required
+  * https://ollama.com
+* OpenRouter:
+
+  * OPENROUTER_API_KEY
+* DeepSeek:
+
+  * DEEPSEEK_API_KEY
+* LLMRouter auto behavior
+* No keys committed
+
+Update docs/ARCHITECTURE.md:
+
+Add:
+
+* Document ingestion pipeline
+* CourseFile
+* DocumentChunk
+* SearchService
+* Simple RAG flow
+* Future vector DB
+
+Update docs/ROADMAP.md:
+
+Mark current phase as:
+
+Phase 1.5:
+
+* Course file parsing
+* Simple RAG
+* Course-aware tutoring
+
+Add future:
+
+Phase 2:
+
+* Embeddings
+* pgvector or Qdrant
+* Better retrieval
+* OCR
+* DOCX/PPTX extraction
+
+Update docs/SECURITY_AND_PRIVACY.md:
+
+Add:
+
+* Uploaded documents are student educational material.
+* Do not expose one user’s chunks to another user.
+* Future LMS tokens must be encrypted.
+* Future FERPA controls before institutional deployment.
+
+============================================================
+PHASE 11 — ADD TESTS
+====================
+
+Add or update tests.
+
+At minimum:
+
+1. Existing health test should still pass.
+2. Add test that DocumentChunk model imports successfully.
+3. Add test that chunk_text works.
+4. Add test that simple search scoring works if feasible.
+
+Suggested tests:
+
+tests/test_health.py
+tests/test_document_service.py
+tests/test_search_service.py
+
+Do not overcomplicate tests, but ensure basic correctness.
+
+Run:
+
+uv sync
+uv run pytest
+
+Fix failures.
+
+============================================================
+PHASE 12 — MANUAL TEST INSTRUCTIONS
+===================================
+
+After implementation, provide manual test steps:
+
+1. Start server:
+
+uv run uvicorn backend.main:app --reload
+
+2. Open frontend:
+
+http://127.0.0.1:8000
+
+3. Open docs:
+
+http://127.0.0.1:8000/docs
+
+4. Register user.
+
+5. Login user.
+
+6. Authorize Swagger with:
+
+Bearer <token>
+
+7. Create course.
+
+8. Upload a .txt, .md, or .pdf file.
+
+9. Confirm upload response includes chunk_count > 0.
+
+10. Call:
+
+GET /api/courses/{course_id}/chunks
+
+11. Call:
+
+POST /api/courses/{course_id}/search
+
+with:
+
+{
+"query": "some topic from the uploaded file"
+}
+
+12. Ask tutor a question related to uploaded material.
+
+13. Confirm tutor response has:
+
+context_used: true
+
+14. Ask unrelated question.
+
+15. Confirm tutor either finds no context or answers generally.
+
+16. Test Ollama Cloud:
+
+Set:
+
+OLLAMA_API_KEY=<real key>
+OLLAMA_BASE_URL=https://ollama.com/api
+OLLAMA_DEFAULT_MODEL=qwen3-coder:480b
+
+Then call tutor endpoint with:
+
+provider = "ollama"
+
+17. Test OpenRouter if key exists.
+
+18. Test DeepSeek if key exists.
+
+============================================================
+PHASE 13 — FINAL OUTPUT REQUIRED
+================================
+
+After completing the upgrade, print:
+
+1. Summary of what changed.
+2. Project tree changes only.
+3. New files created.
+4. Existing files modified.
+5. New dependencies added.
+6. New database model added.
+7. New endpoints added.
+8. AI provider changes.
+9. How Ollama Cloud is now supported.
+10. Manual test instructions.
+11. Test results.
+12. Known limitations.
+13. Next recommended steps.
+
+Known limitations should honestly include:
+
+* Search is simple keyword search, not semantic vector search yet.
+* PDF extraction may be imperfect.
+* DOCX/PPTX/OCR are TODO.
+* Blackboard integration is still scaffolded.
+* Course-aware tutoring depends on extracted text quality.
+* No production FERPA compliance yet.
+
+============================================================
+CRITICAL RULES
+==============
+
+* Do not delete working code.
+* Do not rebuild from scratch.
+* Do not hardcode API keys.
+* Do not expose secrets in logs.
+* Do not commit `.env`.
+* Do not break existing endpoints.
+* Do not claim success unless tests pass or you clearly state what failed.
+* Keep the project runnable with uv.
+* Keep FastAPI docs working.
+* Keep the frontend working.
+* Keep the architecture clean and modular.
+
+Start now.

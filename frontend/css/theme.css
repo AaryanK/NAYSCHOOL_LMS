@@ -1,0 +1,233 @@
+/* ============================================================
+   NaySchool 3.0 — Design System Theme
+   Dark educational command center · Blue/purple glow identity
+   Tokens · Resets · Base styles · Typography
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Squada+One&family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* --- Design Tokens ----------------------------------------- */
+:root {
+  /* Backgrounds */
+  --bg:        #050712;
+  --bg-soft:   #0b1020;
+  --panel:     #11172b;
+  --panel-2:   #151d35;
+  --border:    rgba(139, 92, 246, 0.22);
+
+  /* Text */
+  --text:      #f8fbff;
+  --muted:     #a8b3cf;
+
+  /* Brand palette */
+  --brand:     #7c5cff;
+  --brand-2:   #00d4ff;
+  --brand-3:   #ff4fd8;
+
+  /* Semantic */
+  --success:   #22c55e;
+  --warning:   #f59e0b;
+  --danger:    #ef4444;
+
+  /* Radii */
+  --radius:    18px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+
+  /* Shadows */
+  --shadow-glow: 0 0 40px rgba(124, 92, 255, 0.25);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+
+  /* Typography stacks */
+  --font-display: 'Squada One', cursive;
+  --font-mono:    'Roboto Mono', monospace;
+  --font-body:    'Inter', system-ui, sans-serif;
+
+  /* Motion */
+  --transition:      all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast:  all 0.15s ease;
+}
+
+/* --- Global Reset ------------------------------------------ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* --- Body -------------------------------------------------- */
+body {
+  background:
+    radial-gradient(ellipse 80% 60% at 5% 5%,   rgba(124, 92, 255, 0.12), transparent),
+    radial-gradient(ellipse 70% 50% at 95% 0%,   rgba(0, 212, 255, 0.08), transparent),
+    radial-gradient(ellipse 60% 50% at 90% 100%, rgba(255, 79, 216, 0.06), transparent),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Subtle dot-grid overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(139, 92, 246, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.45;
+}
+
+/* Ensure all direct children sit above the dot overlay */
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Typography -------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.1rem; }
+h6 { font-size: 1rem; }
+
+.brand-text {
+  font-family: var(--font-display);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-brand   { color: var(--brand); }
+.text-muted   { color: var(--muted); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-danger  { color: var(--danger); }
+
+/* --- Links ------------------------------------------------- */
+a {
+  color: var(--brand);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+a:hover {
+  color: #9b85ff;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* --- Selection --------------------------------------------- */
+::selection {
+  background: rgba(124, 92, 255, 0.35);
+  color: #fff;
+}
+
+::-moz-selection {
+  background: rgba(124, 92, 255, 0.35);
+  color: #fff;
+}
+
+/* --- Scrollbar (Webkit) ------------------------------------ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-soft);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 92, 255, 0.35);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 92, 255, 0.55);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 92, 255, 0.35) var(--bg-soft);
+}
+
+/* --- Base Element Resets ----------------------------------- */
+img, video, svg {
+  display: block;
+  max-width: 100%;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* --- Utility: Visually Hidden ------------------------------ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

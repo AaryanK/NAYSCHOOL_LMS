@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing & Subscription Plans | NaySchool 3.0</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .pricing-container {
+      max-width: 1000px;
+      margin: 2rem auto;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    .pricing-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-lg);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      position: relative;
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .pricing-card.featured {
+      border-color: #6366f1;
+      box-shadow: 0 0 25px rgba(99, 102, 241, 0.25);
+    }
+    .pricing-card.featured::before {
+      content: "POPULAR";
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gradient-primary);
+      color: white;
+      padding: 0.25rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+    .plan-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-family: var(--font-heading);
+      margin-bottom: 0.5rem;
+    }
+    .plan-price {
+      font-size: 2.5rem;
+      font-weight: 800;
+      font-family: var(--font-heading);
+      margin: 1.5rem 0;
+      color: var(--text-white);
+    }
+    .plan-price span {
+      font-size: 1rem;
+      color: var(--text-gray);
+      font-weight: 400;
+    }
+    .plan-features {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 2rem;
+      flex: 1;
+    }
+    .plan-features li {
+      margin-bottom: 0.75rem;
+      color: var(--text-gray);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .plan-features li::before {
+      content: "✓";
+      color: var(--accent-cyan);
+      font-weight: bold;
+    }
+    .current-plan-badge {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius-md);
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-top: auto;
+    }
+    @media (max-width: 868px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">
+        <div class="logo-icon">N</div>
+        <span>NaySchool 3.0</span>
+      </a>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-link">Home</a>
+        <a href="lms.html" class="nav-link">LMS Sync</a>
+        <a href="pricing.html" class="nav-link active">Pricing</a>
+        <a href="notifications.html" class="nav-link">Notifications</a>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="pricing-container">
+      <div style="text-align: center; margin-bottom: 3rem;">
+        <h1 class="text-gradient" style="font-size: 3rem;">Supercharge Your Study System</h1>
+        <p style="color: var(--text-gray); font-size: 1.1rem; max-width: 600px; margin: 0.5rem auto 0 auto;">
+          Organize syllabus materials, unlock expert tutoring, and breeze through examinations. Select a plan below.
+        </p>
+      </div>
+
+      <div id="pricing-alert-container"></div>
+
+      <div class="pricing-grid">
+        <!-- Free Plan -->
+        <div class="pricing-card" id="card-free">
+          <div class="plan-title">Free Plan</div>
+          <div style="color: var(--text-gray); font-size: 0.85rem;">For casual review & homework help</div>
+          <div class="plan-price">$0<span>/month</span></div>
+          <ul class="plan-features">
+            <li>50 tutor queries / mo</li>
+            <li>5 document uploads / mo</li>
+            <li>10 practice tests / mo</li>
+            <li>3 exam preps / mo</li>
+            <li>In-app reminders</li>
+          </ul>
+          <div id="btn-container-free">
+            <button class="btn btn-secondary select-plan-btn" style="width: 100%;" data-plan="free">Select Free</button>
+          </div>
+        </div>
+
+        <!-- Plus Plan -->
+        <div class="pricing-card featured" id="card-plus">
+          <div class="plan-title">Plus Plan</div>
+          <div style="color: var(--text-gray); font-size: 0.85rem;">For active college & high school students</div>
+          <div class="plan-price">$9<span>/month</span></div>
+          <ul class="plan-features">
+            <li>500 tutor queries / mo</li>
+            <li>50 document uploads / mo</li>
+            <li>100 practice tests / mo</li>
+            <li>20 exam preps / mo</li>
+            <li>Concept mastery tracking</li>
+            <li>All study tools unlocked</li>
+          </ul>
+          <div id="btn-container-plus">
+            <button class="btn btn-primary select-plan-btn" style="width: 100%;" data-plan="plus">Upgrade to Plus</button>
+          </div>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="pricing-card" id="card-pro">
+          <div class="plan-title">Pro Plan</div>
+          <div style="color: var(--text-gray); font-size: 0.85rem;">For power users and heavy workloads</div>
+          <div class="plan-price">$29<span>/month</span></div>
+          <ul class="plan-features">
+            <li>2000 tutor queries / mo</li>
+            <li>200 document uploads / mo</li>
+            <li>500 practice tests / mo</li>
+            <li>100 exam preps / mo</li>
+            <li>Advanced tutor responses</li>
+            <li>Full history persistence</li>
+          </ul>
+          <div id="btn-container-pro">
+            <button class="btn btn-secondary select-plan-btn" style="width: 100%;" data-plan="pro">Upgrade to Pro</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 NaySchool 3.0. Stripe payment integration is currently stashed (scaffold only).</p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const token = localStorage.getItem("nayschool_token");
+      if (!token) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      // Logout handler
+      document.getElementById("logout-btn").addEventListener("click", () => {
+        localStorage.removeItem("token");
+        window.location.href = "index.html";
+      });
+
+      async function fetchCurrentPlan() {
+        try {
+          const res = await fetch("/api/me/plan", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            updateUIForPlan(data.plan);
+          }
+        } catch (e) {
+          console.error("Error fetching plan", e);
+        }
+      }
+
+      function updateUIForPlan(currentPlan) {
+        // Reset card selections
+        document.querySelectorAll(".pricing-card").forEach(c => {
+          c.classList.remove("featured");
+        });
+        if (currentPlan === "plus") {
+          document.getElementById("card-plus").classList.add("featured");
+        }
+
+        // Set buttons / badges
+        setPlanButton("free", currentPlan);
+        setPlanButton("plus", currentPlan);
+        setPlanButton("pro", currentPlan);
+      }
+
+      function setPlanButton(planName, currentPlan) {
+        const container = document.getElementById(`btn-container-${planName}`);
+        if (currentPlan === planName) {
+          container.innerHTML = `<span class="current-plan-badge">Your Current Plan</span>`;
+        } else {
+          const isPrimary = planName === "plus";
+          const btnClass = isPrimary ? "btn-primary" : "btn-secondary";
+          container.innerHTML = `
+            <button class="btn ${btnClass} select-plan-btn" style="width: 100%;" data-plan="${planName}">
+              ${currentPlan === "free" ? "Upgrade" : "Switch Plan"}
+            </button>
+          `;
+        }
+
+        // Re-attach listener
+        const btn = container.querySelector(".select-plan-btn");
+        if (btn) {
+          btn.addEventListener("click", () => handleSelectPlan(planName));
+        }
+      }
+
+      async function handleSelectPlan(planName) {
+        try {
+          const res = await fetch("/api/me/plan-dev", {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ plan: planName })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            showAlert(`Plan updated successfully to: <strong>${data.plan.toUpperCase()}</strong>. (Scaffold billing trigger logged)`, "success");
+            updateUIForPlan(data.plan);
+          } else {
+            const err = await res.json();
+            showAlert(`Upgrade failed: ${err.detail || "Error occurred"}`);
+          }
+        } catch (e) {
+          showAlert(`Network error: ${e.message}`);
+        }
+      }
+
+      function showAlert(msg, type = "danger") {
+        document.getElementById("pricing-alert-container").innerHTML = `
+          <div class="alert alert-${type}">${msg}</div>
+        `;
+      }
+
+      fetchCurrentPlan();
+    });
+  </script>
+</body>
+</html>

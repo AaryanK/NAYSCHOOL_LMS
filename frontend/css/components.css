@@ -1,0 +1,1506 @@
+/* ============================================================
+   NAYSCHOOL 3.0 — Reusable Components
+   ============================================================
+   Design tokens consumed from theme.css:
+     --bg, --bg-soft, --panel, --panel-2, --border,
+     --text, --muted, --brand, --brand-2, --brand-3,
+     --success, --warning, --danger,
+     --radius, --radius-sm, --radius-xs,
+     --shadow-glow, --shadow-card,
+     --font-display, --font-mono, --font-body,
+     --transition, --transition-fast
+   ============================================================ */
+
+
+/* ==========================================================
+   1. CARDS
+   ========================================================== */
+
+.nay-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.nay-card:hover {
+  border-color: rgba(124, 92, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Card header */
+.nay-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.nay-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.nay-card-subtitle {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Card body */
+.nay-card-body {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Card footer */
+.nay-card-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Card icon */
+.nay-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: rgba(124, 92, 255, 0.1);
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+/* ---- Power Card variant ---- */
+.nay-card.power-card {
+  border-left: 4px solid var(--brand);
+}
+
+.nay-card.power-card:hover {
+  box-shadow: 0 0 28px rgba(124, 92, 255, 0.18),
+              0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* ---- Stat Card variant ---- */
+.nay-card.stat-card {
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.nay-card.stat-card .stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.nay-card.stat-card .stat-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+  margin-top: 6px;
+}
+
+.nay-card.stat-card .stat-delta {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.nay-card.stat-card .stat-delta.up {
+  color: var(--success);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.nay-card.stat-card .stat-delta.down {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ---- Clickable card ---- */
+.nay-card.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ---- Flat (no hover lift) ---- */
+.nay-card.flat:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+
+/* ==========================================================
+   2. BUTTONS
+   ========================================================== */
+
+.nay-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 99px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  font-family: var(--font-body);
+  text-decoration: none;
+  line-height: 1.4;
+  white-space: nowrap;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.nay-btn:active {
+  transform: scale(0.97);
+}
+
+/* ---- Primary ---- */
+.nay-btn-primary {
+  background: linear-gradient(135deg, var(--brand), #9333ea);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(124, 92, 255, 0.3);
+}
+
+.nay-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(124, 92, 255, 0.4);
+}
+
+.nay-btn-primary:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* ---- Secondary ---- */
+.nay-btn-secondary {
+  background: transparent;
+  color: var(--brand);
+  border: 1px solid var(--brand);
+}
+
+.nay-btn-secondary:hover {
+  background: rgba(124, 92, 255, 0.1);
+}
+
+/* ---- Ghost ---- */
+.nay-btn-ghost {
+  background: transparent;
+  color: var(--muted);
+}
+
+.nay-btn-ghost:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ---- Success ---- */
+.nay-btn-success {
+  background: var(--success);
+  color: #ffffff;
+}
+
+.nay-btn-success:hover {
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ---- Danger ---- */
+.nay-btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.nay-btn-danger:hover {
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ---- Warning ---- */
+.nay-btn-warning {
+  background: var(--warning);
+  color: #000000;
+}
+
+.nay-btn-warning:hover {
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ---- Sizes ---- */
+.nay-btn-sm {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+.nay-btn-lg {
+  padding: 14px 32px;
+  font-size: 16px;
+}
+
+.nay-btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 16px;
+}
+
+.nay-btn-icon.sm {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+}
+
+/* ---- Disabled ---- */
+.nay-btn:disabled,
+.nay-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---- Loading state ---- */
+.nay-btn.loading {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.nay-btn.loading::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-left: 4px;
+}
+
+/* ---- Button group ---- */
+.nay-btn-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ---- Full-width ---- */
+.nay-btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+
+/* ==========================================================
+   3. FORMS
+   ========================================================== */
+
+.nay-form-group {
+  margin-bottom: 16px;
+}
+
+.nay-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-mono);
+}
+
+.nay-label .required {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+.nay-input,
+.nay-select,
+.nay-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font-body);
+  transition: var(--transition);
+  box-sizing: border-box;
+}
+
+.nay-input::placeholder,
+.nay-textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.nay-input:focus,
+.nay-select:focus,
+.nay-textarea:focus {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15);
+}
+
+.nay-input:hover:not(:focus),
+.nay-select:hover:not(:focus),
+.nay-textarea:hover:not(:focus) {
+  border-color: rgba(124, 92, 255, 0.25);
+}
+
+/* Error state */
+.nay-input.error,
+.nay-select.error,
+.nay-textarea.error {
+  border-color: var(--danger);
+}
+
+.nay-input.error:focus,
+.nay-select.error:focus,
+.nay-textarea.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* Success state */
+.nay-input.valid,
+.nay-select.valid,
+.nay-textarea.valid {
+  border-color: var(--success);
+}
+
+/* Textarea */
+.nay-textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* Select */
+.nay-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M2.22 4.47a.75.75 0 0 1 1.06 0L6 7.19l2.72-2.72a.75.75 0 1 1 1.06 1.06L6.53 8.78a.75.75 0 0 1-1.06 0L2.22 5.53a.75.75 0 0 1 0-1.06z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* Form hint text */
+.nay-form-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.nay-form-hint.error {
+  color: var(--danger);
+}
+
+/* Input group (icon + input) */
+.nay-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nay-input-group .nay-input {
+  padding-left: 40px;
+}
+
+.nay-input-group .input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--muted);
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Checkbox / Toggle */
+.nay-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.nay-toggle input {
+  display: none;
+}
+
+.nay-toggle-track {
+  width: 40px;
+  height: 22px;
+  border-radius: 99px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  position: relative;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.nay-toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: var(--transition);
+}
+
+.nay-toggle input:checked + .nay-toggle-track {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.nay-toggle input:checked + .nay-toggle-track::after {
+  transform: translateX(18px);
+  background: #ffffff;
+}
+
+/* Search input */
+.nay-search {
+  position: relative;
+}
+
+.nay-search .nay-input {
+  padding-left: 40px;
+  padding-right: 16px;
+}
+
+.nay-search .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  font-size: 14px;
+}
+
+
+/* ==========================================================
+   4. BADGES
+   ========================================================== */
+
+.nay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.nay-badge-brand {
+  background: rgba(124, 92, 255, 0.15);
+  color: var(--brand);
+}
+
+.nay-badge-success {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--success);
+}
+
+.nay-badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+}
+
+.nay-badge-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+
+.nay-badge-info {
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--brand-2);
+}
+
+.nay-badge-mono {
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+/* Dot indicator badge */
+.nay-badge-dot {
+  padding-left: 8px;
+}
+
+.nay-badge-dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Badge with count */
+.nay-badge-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 50%;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--danger);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+
+/* ==========================================================
+   5. TOAST NOTIFICATIONS
+   ========================================================== */
+
+.nay-toast-container {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.nay-toast {
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  min-width: 280px;
+  max-width: 420px;
+  box-shadow: var(--shadow-card);
+  animation: slideInRight 0.3s ease forwards;
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  line-height: 1.5;
+}
+
+.nay-toast .toast-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.nay-toast .toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.nay-toast .toast-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.nay-toast .toast-message {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.nay-toast .toast-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px;
+  flex-shrink: 0;
+  transition: var(--transition-fast);
+}
+
+.nay-toast .toast-close:hover {
+  color: var(--text);
+}
+
+/* Toast variants */
+.nay-toast.success {
+  border-left: 4px solid var(--success);
+}
+
+.nay-toast.success .toast-icon {
+  color: var(--success);
+}
+
+.nay-toast.error {
+  border-left: 4px solid var(--danger);
+}
+
+.nay-toast.error .toast-icon {
+  color: var(--danger);
+}
+
+.nay-toast.warning {
+  border-left: 4px solid var(--warning);
+}
+
+.nay-toast.warning .toast-icon {
+  color: var(--warning);
+}
+
+.nay-toast.info {
+  border-left: 4px solid var(--brand-2);
+}
+
+.nay-toast.info .toast-icon {
+  color: var(--brand-2);
+}
+
+/* Toast removal */
+.nay-toast.removing {
+  animation: fadeOut 0.25s ease forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+
+
+/* ==========================================================
+   6. MODAL
+   ========================================================== */
+
+.nay-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modalOverlayIn 0.2s ease;
+  padding: 24px;
+}
+
+.nay-modal-overlay.closing {
+  animation: modalOverlayOut 0.2s ease forwards;
+}
+
+.nay-modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  max-width: 520px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.25s ease;
+  position: relative;
+}
+
+.nay-modal-overlay.closing .nay-modal {
+  animation: modalSlideOut 0.2s ease forwards;
+}
+
+.nay-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  transition: var(--transition-fast);
+}
+
+.nay-modal-close:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nay-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  padding-right: 32px;
+}
+
+.nay-modal-body {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.nay-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+/* Modal size variants */
+.nay-modal.sm {
+  max-width: 380px;
+}
+
+.nay-modal.lg {
+  max-width: 680px;
+}
+
+.nay-modal.xl {
+  max-width: 860px;
+}
+
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalOverlayOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+
+/* ==========================================================
+   7. LOADING STATES
+   ========================================================== */
+
+/* Spinner */
+.nay-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--border);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+.nay-spinner.sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.nay-spinner.lg {
+  width: 36px;
+  height: 36px;
+  border-width: 4px;
+}
+
+/* Loading overlay */
+.nay-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 18, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  z-index: 10;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nay-loading-overlay .loading-text {
+  font-size: 13px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+/* Skeleton loader */
+.nay-skeleton {
+  background: var(--panel-2);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s ease-in-out infinite;
+  min-height: 16px;
+}
+
+.nay-skeleton.text {
+  height: 14px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.nay-skeleton.text.short {
+  width: 60%;
+}
+
+.nay-skeleton.heading {
+  height: 22px;
+  width: 45%;
+  margin-bottom: 12px;
+}
+
+.nay-skeleton.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.nay-skeleton.card {
+  height: 140px;
+}
+
+.nay-skeleton.thumbnail {
+  width: 100%;
+  height: 180px;
+  border-radius: var(--radius);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
+
+/* ==========================================================
+   8. EMPTY STATE
+   ========================================================== */
+
+.nay-empty {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.nay-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.nay-empty-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.nay-empty-text {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 20px;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.nay-empty-action {
+  margin-top: 8px;
+}
+
+
+/* ==========================================================
+   9. TABLE
+   ========================================================== */
+
+.nay-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.nay-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.nay-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.nay-table tr:hover td {
+  background: rgba(124, 92, 255, 0.05);
+}
+
+.nay-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Responsive wrapper */
+.nay-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+/* Sortable header */
+.nay-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition-fast);
+}
+
+.nay-table th.sortable:hover {
+  color: var(--text);
+}
+
+.nay-table th.sorted {
+  color: var(--brand);
+}
+
+
+/* ==========================================================
+   10. PROGRESS BAR
+   ========================================================== */
+
+.nay-progress {
+  background: var(--panel-2);
+  height: 8px;
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+}
+
+.nay-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  border-radius: 99px;
+  transition: width 0.5s ease;
+  min-width: 0;
+}
+
+.nay-progress.sm {
+  height: 4px;
+}
+
+.nay-progress.lg {
+  height: 12px;
+}
+
+/* Progress bar variants */
+.nay-progress-fill.success {
+  background: linear-gradient(90deg, var(--success), #86efac);
+}
+
+.nay-progress-fill.warning {
+  background: linear-gradient(90deg, var(--warning), #fbbf24);
+}
+
+.nay-progress-fill.danger {
+  background: linear-gradient(90deg, var(--danger), #fca5a5);
+}
+
+/* Labeled progress */
+.nay-progress-labeled {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.nay-progress-labeled .progress-label {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.nay-progress-labeled .progress-value {
+  color: var(--text);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Animated / indeterminate */
+.nay-progress.indeterminate .nay-progress-fill {
+  width: 30% !important;
+  animation: indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes indeterminate {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+
+/* ==========================================================
+   11. CHIP LIST / TAGS
+   ========================================================== */
+
+.nay-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  transition: var(--transition-fast);
+  cursor: default;
+  white-space: nowrap;
+}
+
+.nay-chip.active {
+  background: rgba(124, 92, 255, 0.15);
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.nay-chip.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.nay-chip.clickable:hover {
+  border-color: rgba(124, 92, 255, 0.4);
+  color: var(--text);
+}
+
+/* Removable chip */
+.nay-chip .chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 10px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: none;
+  color: inherit;
+  padding: 0;
+  margin-left: 2px;
+}
+
+.nay-chip .chip-remove:hover {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+/* Chip list container */
+.nay-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Chip icon */
+.nay-chip .chip-icon {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Chip color variants */
+.nay-chip.brand {
+  background: rgba(124, 92, 255, 0.1);
+  color: var(--brand);
+  border-color: rgba(124, 92, 255, 0.25);
+}
+
+.nay-chip.success {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--success);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.nay-chip.danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+
+/* ==========================================================
+   12. USAGE LIMIT OVERLAY
+   ========================================================== */
+
+.nay-usage-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modalOverlayIn 0.3s ease;
+  padding: 24px;
+}
+
+.nay-usage-modal {
+  background: var(--panel);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 40px;
+  max-width: 460px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease;
+}
+
+/* Gradient border effect */
+.nay-usage-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  padding: 1px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2), var(--brand-3));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Top glow accent */
+.nay-usage-modal::after {
+  content: "";
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 120px;
+  background: radial-gradient(ellipse, rgba(124, 92, 255, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.nay-usage-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.nay-usage-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 12px;
+  font-family: var(--font-display);
+  position: relative;
+  z-index: 1;
+}
+
+.nay-usage-text {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.nay-usage-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.nay-usage-actions .nay-btn-primary {
+  width: 100%;
+  padding: 14px 28px;
+  font-size: 15px;
+}
+
+.nay-usage-actions .nay-btn-ghost {
+  font-size: 13px;
+}
+
+/* Usage meter inside overlay */
+.nay-usage-meter {
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.nay-usage-meter .meter-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.nay-usage-meter .meter-bar {
+  height: 8px;
+  background: var(--panel-2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.nay-usage-meter .meter-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--warning), var(--danger));
+  width: 100%;
+}
+
+
+/* ==========================================================
+   13. UTILITY / SHARED
+   ========================================================== */
+
+/* Divider */
+.nay-divider {
+  height: 1px;
+  background: var(--border);
+  border: none;
+  margin: 16px 0;
+}
+
+.nay-divider.spaced {
+  margin: 24px 0;
+}
+
+/* Avatar */
+.nay-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+.nay-avatar.sm {
+  width: 28px;
+  height: 28px;
+}
+
+.nay-avatar.lg {
+  width: 48px;
+  height: 48px;
+}
+
+.nay-avatar.xl {
+  width: 64px;
+  height: 64px;
+}
+
+/* Avatar placeholder (initials) */
+.nay-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(124, 92, 255, 0.15);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+/* Tooltip (CSS-only via data-tooltip) */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: var(--transition-fast);
+  z-index: 9000;
+  box-shadow: var(--shadow-card);
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Scrollbar styling */
+.nay-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nay-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nay-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
+
+.nay-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Truncation */
+.nay-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nay-line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nay-line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Focus ring utility */
+.nay-focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.3);
+}
+
+/* Visually hidden (sr-only) */
+.nay-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

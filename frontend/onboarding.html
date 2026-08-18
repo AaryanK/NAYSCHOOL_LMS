@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to NaySchool | Onboarding</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .onboarding-container {
+      max-width: 600px;
+      margin: 4rem auto;
+    }
+    .wizard-step {
+      display: none;
+    }
+    .wizard-step.active {
+      display: block;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .option-card {
+      background: rgba(15, 22, 36, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      padding: 1.25rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .option-card:hover, .option-card.selected {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.15);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+    }
+    .option-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+    .option-card p {
+      font-size: 0.8rem;
+      color: var(--text-gray);
+    }
+    .wizard-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      padding-top: 1.5rem;
+    }
+    .progress-bar {
+      height: 4px;
+      background: var(--border-color);
+      border-radius: 2px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--gradient-primary);
+      width: 20%;
+      transition: var(--transition-smooth);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">N</div>
+        <span>NaySchool 3.0</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div class="onboarding-container card">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      
+      <div id="onboarding-alert"></div>
+
+      <form id="onboarding-form">
+        <!-- Step 1: Education Level -->
+        <div class="wizard-step active" data-step="1">
+          <h2 class="text-gradient" style="font-size: 2rem; margin-bottom: 0.5rem;">Select your education level</h2>
+          <p style="color: var(--text-gray); margin-bottom: 1.5rem;">Help us tailor your learning experience.</p>
+          <div class="option-grid" id="education-grid">
+            <div class="option-card" data-val="middle_school">
+              <h3>Middle School</h3>
+              <p>Foundational concepts</p>
+            </div>
+            <div class="option-card" data-val="high_school">
+              <h3>High School</h3>
+              <p>Prep for college & finals</p>
+            </div>
+            <div class="option-card" data-val="college">
+              <h3>College</h3>
+              <p>Deep academic coursework</p>
+            </div>
+            <div class="option-card" data-val="self_learner">
+              <h3>Self Learner</h3>
+              <p>Own pace, custom topics</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: What are you studying? -->
+        <div class="wizard-step" data-step="2">
+          <h2 class="text-gradient" style="font-size: 2rem; margin-bottom: 0.5rem;">What are you studying?</h2>
+          <p style="color: var(--text-gray); margin-bottom: 1.5rem;">Enter your major or main subjects.</p>
+          <div class="form-group">
+            <label class="form-label" for="ob-major">Major / Primary Subject</label>
+            <input type="text" id="ob-major" class="form-control" placeholder="e.g. Computer Science, Pre-Med, General Science" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ob-school">School Name (Optional)</label>
+            <input type="text" id="ob-school" class="form-control" placeholder="e.g. Stanford University, Oak High School">
+          </div>
+        </div>
+
+        <!-- Step 3: Main Goals -->
+        <div class="wizard-step" data-step="3">
+          <h2 class="text-gradient" style="font-size: 2rem; margin-bottom: 0.5rem;">What is your main goal?</h2>
+          <p style="color: var(--text-gray); margin-bottom: 1.5rem;">What would make this app a huge win for you?</p>
+          <div class="option-grid" id="goal-grid">
+            <div class="option-card" data-val="finish homework faster">
+              <h3>Finish Homework</h3>
+              <p>Clear doubts & guide homework</p>
+            </div>
+            <div class="option-card" data-val="prepare for exams">
+              <h3>Exam Prep</h3>
+              <p>Practice tests & weak topics</p>
+            </div>
+            <div class="option-card" data-val="understand difficult topics">
+              <h3>Understand Concepts</h3>
+              <p>AI explanation of hard parts</p>
+            </div>
+            <div class="option-card" data-val="organize courses">
+              <h3>Stay Organized</h3>
+              <p>Track materials and deadlines</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Daily Commitment -->
+        <div class="wizard-step" data-step="4">
+          <h2 class="text-gradient" style="font-size: 2rem; margin-bottom: 0.5rem;">Set a daily study goal</h2>
+          <p style="color: var(--text-gray); margin-bottom: 1.5rem;">How many minutes would you like to dedicate daily?</p>
+          <div class="form-group" style="text-align: center; margin: 3rem 0;">
+            <input type="number" id="ob-minutes" class="form-control" style="font-size: 2.5rem; text-align: center; width: 160px; height: 80px; margin: 0 auto;" value="30" min="5" max="300" required>
+            <div style="margin-top: 1rem; font-weight: 600; color: var(--text-gray);">MINUTES / DAY</div>
+          </div>
+        </div>
+
+        <!-- Step 5: Study Style -->
+        <div class="wizard-step" data-step="5">
+          <h2 class="text-gradient" style="font-size: 2rem; margin-bottom: 0.5rem;">Preferred study style</h2>
+          <p style="color: var(--text-gray); margin-bottom: 1.5rem;">How do you learn best?</p>
+          <div class="option-grid" id="style-grid">
+            <div class="option-card" data-val="step_by_step">
+              <h3>Step-by-Step</h3>
+              <p>Detailed walk-throughs</p>
+            </div>
+            <div class="option-card" data-val="quick_summary">
+              <h3>Summaries</h3>
+              <p>Quick, high-level overviews</p>
+            </div>
+            <div class="option-card" data-val="practice_first">
+              <h3>Practice First</h3>
+              <p>Solve questions and see errors</p>
+            </div>
+            <div class="option-card" data-val="visual">
+              <h3>Visual Explanations</h3>
+              <p>Diagrams & structures</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-footer">
+          <button type="button" class="btn btn-secondary" id="btn-back" disabled>Back</button>
+          <button type="button" class="btn btn-primary" id="btn-next">Next</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 NaySchool 3.0. Built for student productivity.</p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      let currentStep = 1;
+      const totalSteps = 5;
+      
+      const educationCards = document.querySelectorAll("#education-grid .option-card");
+      const goalCards = document.querySelectorAll("#goal-grid .option-card");
+      const styleCards = document.querySelectorAll("#style-grid .option-card");
+      
+      let selectedEducation = "";
+      let selectedGoal = "";
+      let selectedStyle = "";
+
+      // Setup click listeners for options cards
+      setupCardGrid(educationCards, val => selectedEducation = val);
+      setupCardGrid(goalCards, val => selectedGoal = val);
+      setupCardGrid(styleCards, val => selectedStyle = val);
+
+      function setupCardGrid(cards, callback) {
+        cards.forEach(card => {
+          card.addEventListener("click", () => {
+            cards.forEach(c => c.classList.remove("selected"));
+            card.classList.add("selected");
+            callback(card.dataset.val);
+          });
+        });
+      }
+
+      const btnBack = document.getElementById("btn-back");
+      const btnNext = document.getElementById("btn-next");
+      const progressFill = document.getElementById("progress-fill");
+
+      function updateStepView() {
+        // Show active step
+        document.querySelectorAll(".wizard-step").forEach(step => {
+          step.classList.remove("active");
+          if (parseInt(step.dataset.step) === currentStep) {
+            step.classList.add("active");
+          }
+        });
+        
+        // Progress Fill
+        progressFill.style.width = `${(currentStep / totalSteps) * 100}%`;
+        
+        // Enable/Disable Back
+        btnBack.disabled = (currentStep === 1);
+        
+        // Next or Complete button text
+        if (currentStep === totalSteps) {
+          btnNext.textContent = "Finish Onboarding";
+        } else {
+          btnNext.textContent = "Next";
+        }
+      }
+
+      btnBack.addEventListener("click", () => {
+        if (currentStep > 1) {
+          currentStep--;
+          updateStepView();
+        }
+      });
+
+      btnNext.addEventListener("click", async () => {
+        // Validation checks per step
+        if (currentStep === 1 && !selectedEducation) {
+          showAlert("Please select an education level to proceed.");
+          return;
+        }
+        if (currentStep === 2 && !document.getElementById("ob-major").value.strip) {
+          if (!document.getElementById("ob-major").checkValidity()) {
+             showAlert("Please enter what you are studying.");
+             return;
+          }
+        }
+        if (currentStep === 3 && !selectedGoal) {
+          showAlert("Please select your main study goal.");
+          return;
+        }
+        if (currentStep === 4 && !document.getElementById("ob-minutes").checkValidity()) {
+          showAlert("Please specify a valid number of daily minutes.");
+          return;
+        }
+        if (currentStep === 5 && !selectedStyle) {
+          showAlert("Please select a study style.");
+          return;
+        }
+
+        clearAlert();
+
+        if (currentStep < totalSteps) {
+          currentStep++;
+          updateStepView();
+        } else {
+          // Submit data to backend
+          const payload = {
+            education_level: selectedEducation,
+            major: document.getElementById("ob-major").value,
+            school_name: document.getElementById("ob-school").value || null,
+            study_goal: selectedGoal,
+            preferred_study_style: selectedStyle,
+            daily_study_minutes: parseInt(document.getElementById("ob-minutes").value)
+          };
+
+          const token = localStorage.getItem("nayschool_token");
+          if (!token) {
+            window.location.href = "index.html";
+            return;
+          }
+
+          try {
+            const res = await fetch("/api/me/onboarding/complete", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+              window.location.href = "dashboard.html";
+            } else {
+              const err = await res.json();
+              showAlert(`Error completing onboarding: ${err.detail || "Request failed"}`);
+            }
+          } catch (e) {
+            showAlert(`Network error: ${e.message}`);
+          }
+        }
+      });
+
+      function showAlert(msg) {
+        const container = document.getElementById("onboarding-alert");
+        container.innerHTML = `<div class="alert alert-danger">${msg}</div>`;
+      }
+
+      function clearAlert() {
+        document.getElementById("onboarding-alert").innerHTML = "";
+      }
+    });
+  </script>
+</body>
+</html>

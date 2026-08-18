@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LMS Integrations | NaySchool 3.0</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">N</div>
+        <span>NaySchool 3.0</span>
+      </a>
+      <nav class="nav-links"></nav>
+    </div>
+  </header>
+
+  <main>
+    <div id="lms-alert-container"></div>
+
+    <div style="display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
+      <span class="badge" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); border: 1px solid var(--border-color); font-size: 1rem; padding: 0.4rem 1rem;">LMS</span>
+      <h1>Learning Management Systems</h1>
+    </div>
+
+    <p style="color: var(--text-gray); margin-bottom: 2rem; line-height: 1.6; max-width: 800px;">
+      Integrate your institutional learning environment securely using university OAuth. NaySchool connects directly to REST APIs to index syllabus details, calendar checkpoints, announcements, and track assignments without password scraping.
+    </p>
+
+    <div class="grid-2">
+      <!-- Left side: Available Providers -->
+      <div>
+        <h2 style="margin-bottom: 1.25rem; font-family: var(--font-heading);">LMS Connection Panel</h2>
+        <div id="providers-list">
+          <!-- Providers list injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Right side: Active Connections & Logs -->
+      <div>
+        <h2 style="margin-bottom: 1.25rem; font-family: var(--font-heading);">Active Integrations</h2>
+        <div id="connections-list" style="margin-bottom: 2rem;">
+          <!-- Connections list injected dynamically -->
+        </div>
+
+        <!-- Sync Status Summary -->
+        <div id="sync-status-box" class="card" style="display: none; padding: 1.25rem; margin-bottom: 2rem; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color);">
+          <!-- Sync statistics injected dynamically -->
+        </div>
+
+        <!-- Sync Logs Box -->
+        <div id="sync-logs-box" class="card" style="display: none; padding: 1.5rem;">
+          <h3 style="margin-bottom: 1rem; color: var(--accent-cyan);">Sync Run Logs</h3>
+          <div id="sync-logs-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 350px; overflow-y: auto; padding-right: 0.5rem;">
+            <!-- Logs injected dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 NaySchool 3.0. Built for production-ready academic excellence.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

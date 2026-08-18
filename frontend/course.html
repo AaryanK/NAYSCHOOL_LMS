@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Workspace | NaySchool 3.0</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Tab Styling */
+    .tab-container {
+      display: flex;
+      gap: 0.25rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-gray);
+      padding: 0.5rem 1.25rem;
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: var(--transition-smooth);
+    }
+    .tab-btn:hover {
+      color: var(--text-white);
+    }
+    .tab-btn.active {
+      color: #6366f1;
+      border-bottom-color: #6366f1;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    /* Split layout for chat */
+    .chat-split-container {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 1.5rem;
+      min-height: 500px;
+    }
+    .chat-sidebar {
+      background: rgba(10, 14, 23, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .chat-sessions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      overflow-y: auto;
+      max-height: 420px;
+    }
+    .chat-session-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-white);
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: var(--transition-smooth);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .chat-session-btn:hover, .chat-session-btn.active {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--border-hover);
+    }
+    .chat-session-delete {
+      background: transparent;
+      border: none;
+      color: var(--text-dark);
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+      padding: 0 0.25rem;
+    }
+    .chat-session-delete:hover {
+      color: var(--accent-rose);
+    }
+
+    /* Message history box styling */
+    .message-history-box {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      padding: 1.5rem;
+      background: rgba(5, 7, 12, 0.5);
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .chat-msg {
+      padding: 0.8rem 1.2rem;
+      border-radius: 12px;
+      max-width: 80%;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .chat-msg.user {
+      background: #312e81;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+    .chat-msg.assistant {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-white);
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+      white-space: pre-line;
+    }
+
+    /* Overview metrics layout */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+      .chat-split-container {
+        grid-template-columns: 1fr;
+      }
+      .overview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">
+        <div class="logo-icon">N</div>
+        <span>NaySchool 3.0</span>
+      </a>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-link">Home</a>
+        <a href="lms.html" class="nav-link">LMS Sync</a>
+        <a href="pricing.html" class="nav-link">Pricing</a>
+        <a href="notifications.html" class="nav-link">Notifications</a>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div id="alert-container"></div>
+
+    <!-- Course Header Banner -->
+    <div style="display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
+      <span id="course-code-header" class="badge" style="background: rgba(99, 102, 241, 0.15); color: #8b5cf6; border: 1px solid var(--border-color); font-size: 1rem; padding: 0.4rem 1rem;">-</span>
+      <h1 id="course-title-header">Loading Course Workspace...</h1>
+    </div>
+
+    <!-- AI Provider Selection Dropdown (Persistent on Workspace top) -->
+    <div class="card" style="padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.25rem;">🤖</span>
+        <strong style="font-size: 0.95rem; font-family: var(--font-heading);">LLM Provider</strong>
+      </div>
+      <div>
+        <select id="provider-select" class="form-control" style="width: 210px; padding: 0.4rem 0.8rem; font-size: 0.9rem;">
+          <option value="auto">Auto Router (Fallback)</option>
+          <option value="ollama">Ollama (Local API)</option>
+          <option value="openrouter">OpenRouter (Cloud)</option>
+          <option value="deepseek">DeepSeek (Direct Cloud)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Dynamic Tabs Navigation -->
+    <div class="tab-container">
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="tutor">Tutor Chat</button>
+      <button class="tab-btn" data-tab="materials">Materials</button>
+      <button class="tab-btn" data-tab="topics">Topics Map</button>
+      <button class="tab-btn" data-tab="practice">Practice Quiz</button>
+      <button class="tab-btn" data-tab="study-plan">Study Plan</button>
+      <button class="tab-btn" data-tab="exam-prep">Exam Prep</button>
+      <button class="tab-btn" data-tab="flashcards">Flashcards</button>
+    </div>
+
+    <!-- Tab contents -->
+    <div class="workspace-container">
+      
+      <!-- 1. OVERVIEW TAB -->
+      <div class="tab-content active" id="tab-overview">
+        <div class="overview-grid">
+          <div>
+            <!-- Metrics Row -->
+            <div class="card" id="learning-dashboard-card" style="margin-bottom: 2rem;">
+              <h3 style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                <span>📈 Learning Dashboard</span>
+                <button id="refresh-dashboard-btn" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">Refresh Stats</button>
+              </h3>
+              <div class="grid-3" style="gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85rem; color: var(--text-gray);">Average Mastery</div>
+                  <div id="dashboard-avg-mastery" style="font-size: 1.75rem; font-weight: bold; color: #8b5cf6; margin-top: 0.25rem;">0%</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85rem; color: var(--text-gray);">Course Topics</div>
+                  <div id="dashboard-topics-count" style="font-size: 1.75rem; font-weight: bold; color: var(--accent-cyan); margin-top: 0.25rem;">0</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85rem; color: var(--text-gray);">Attempts / Practice</div>
+                  <div id="dashboard-attempts-count" style="font-size: 1.75rem; font-weight: bold; color: var(--accent-emerald); margin-top: 0.25rem;">0 / 0</div>
+                </div>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+                <div>
+                  <h4 style="color: var(--accent-rose); margin-bottom: 0.75rem; font-size: 0.95rem;">⚠️ Weakest Topics</h4>
+                  <ul id="dashboard-weak-topics" style="list-style: none; padding: 0; font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <li style="color: var(--text-gray);">No data. Extract topics to begin.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 style="color: var(--accent-emerald); margin-bottom: 0.75rem; font-size: 0.95rem;">⭐ Strongest Topics</h4>
+                  <ul id="dashboard-strong-topics" style="list-style: none; padding: 0; font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <li style="color: var(--text-gray);">No data. Complete practice questions to raise mastery.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Ask Tutor Box -->
+            <div class="card" style="margin-bottom: 2rem;">
+              <h3 style="margin-bottom: 0.75rem; font-size: 1.25rem;">Quick Question</h3>
+              <p style="color: var(--text-gray); font-size: 0.85rem; margin-bottom: 1rem;">Need a quick helper? Ask the tutor here and we'll load the full chat room.</p>
+              <form id="quick-ask-form">
+                <div class="form-group" style="display: flex; gap: 1rem; margin-bottom: 0;">
+                  <input type="text" id="quick-ask-question" class="form-control" placeholder="Ask a quick concept question..." required>
+                  <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Ask</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- LMS Connection Blackboard Scaffold Card -->
+            <div class="card" style="margin-bottom: 2rem;">
+              <h3 style="margin-bottom: 0.75rem; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">🏫 Blackboard Link</h3>
+              <p style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 1rem;">Link this course with Blackboard LMS to pull assignments and schedules.</p>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button id="bb-status-btn" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Show Status</button>
+                <button id="bb-connect-btn" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Request Connection</button>
+                <button id="bb-sync-btn" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Sync Course</button>
+              </div>
+              <div id="blackboard-scaffold-output" style="display: none; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.75rem; margin-top: 0.75rem; font-size: 0.8rem; max-height: 200px; overflow-y: auto;"></div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Right side details -->
+            <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+              <h3 style="margin-bottom: 0.75rem; font-size: 1.15rem;">Course Details</h3>
+              <div style="font-size: 0.9rem; margin-bottom: 0.5rem;"><strong>Instructor:</strong> <span id="course-instructor-text">-</span></div>
+              <div style="font-size: 0.85rem; color: var(--text-gray); line-height: 1.4;" id="course-desc-text">-</div>
+            </div>
+
+            <!-- Ingestion Summary Card -->
+            <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h3 style="margin: 0; font-size: 1.15rem;">Ingestion Status</h3>
+                <button id="refresh-ingestion-btn" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; white-space: nowrap;">Refresh</button>
+              </div>
+              <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; justify-content: space-between;"><strong>Total Files:</strong> <span id="ingest-total-files" style="color: var(--text-white); font-weight: bold;">-</span></div>
+                <div style="display: flex; justify-content: space-between;"><strong>Completed:</strong> <span id="ingest-completed" style="color: var(--accent-emerald); font-weight: bold;">-</span></div>
+                <div style="display: flex; justify-content: space-between;"><strong>Processing:</strong> <span id="ingest-processing" style="color: var(--accent-cyan); font-weight: bold;">-</span></div>
+                <div style="display: flex; justify-content: space-between;"><strong>Failed:</strong> <span id="ingest-failed" style="color: var(--accent-rose); font-weight: bold;">-</span></div>
+              </div>
+            </div>
+
+            <!-- Embedding Status -->
+            <div class="card" id="embedding-status-card" style="padding: 1.5rem;">
+              <h3 style="margin-bottom: 0.75rem; font-size: 1.15rem;">⚙️ Semantic RAG</h3>
+              <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem;">
+                <div><strong>Total Chunks:</strong> <span id="embed-total-chunks" style="color: var(--text-white); font-weight: bold;">-</span></div>
+                <div><strong>Embedded Chunks:</strong> <span id="embed-embedded-chunks" style="color: var(--accent-emerald); font-weight: bold;">-</span></div>
+                <div><strong>Missing Chunks:</strong> <span id="embed-missing-chunks" style="color: var(--accent-rose); font-weight: bold;">-</span></div>
+                <div><strong>Embedding Model:</strong> <span id="embed-model-name" style="color: var(--accent-cyan); font-family: monospace; font-size: 0.75rem;">-</span></div>
+              </div>
+              <button id="generate-embeddings-btn" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 0.5rem 1rem;">Generate Embeddings</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. TUTOR CHAT TAB (With sidebar) -->
+      <div class="tab-content" id="tab-tutor">
+        <div class="chat-split-container">
+          <!-- Chat Sidebar: persistent history -->
+          <div class="chat-sidebar">
+            <button class="btn btn-primary" id="btn-new-chat" style="font-size: 0.85rem; padding: 0.5rem 1rem; width: 100%;">+ New Chat</button>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-top: 0.5rem;">Previous Chats</div>
+            <div class="chat-sessions-list" id="chat-sessions-list">
+              <!-- Sessions loaded dynamically -->
+              <div style="font-size: 0.8rem; color: var(--text-dark); padding: 0.5rem;">No saved chats.</div>
+            </div>
+          </div>
+
+          <!-- Chat Room Interface -->
+          <div>
+            <div id="active-chat-title" style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-white); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Tutor Chat</div>
+            
+            <div class="message-history-box" id="chat-message-history">
+              <!-- Dynamically populated messages -->
+              <div class="chat-msg assistant">
+                Hello! I am your NaySchool Course Tutor. Ask me any question about the uploaded materials, assignments, or study plans. I'll guide you step-by-step!
+              </div>
+            </div>
+
+            <form id="ask-tutor-form">
+              <div class="form-group" style="display: flex; gap: 1rem; margin-bottom: 0;">
+                <input type="text" id="tutor-question" class="form-control" placeholder="Ask a question about this course..." required>
+                <button type="submit" class="btn btn-primary" id="ask-tutor-btn" style="white-space: nowrap;">Send</button>
+              </div>
+            </form>
+
+            <!-- Metadata info cards -->
+            <div id="ai-tutor-response-box" class="ai-response-card" style="display: none; margin-top: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+                <h4 style="color: var(--accent-purple);">Tutor Meta Info</h4>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <span id="tutor-search-mode-badge" class="badge" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); border: 1px solid rgba(139, 92, 246, 0.3);">Mode: -</span>
+                  <span id="tutor-context-badge" class="badge" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.3);">Context: No</span>
+                  <span id="tutor-integrity-badge" class="badge">Safety: CHECKING</span>
+                </div>
+              </div>
+              <!-- Keep hidden targets so app.js can populate them without error -->
+              <div id="tutor-answer" style="display: none;"></div>
+              <div id="tutor-steps" style="display: none;"></div>
+              <div id="tutor-followup" style="display: none;"></div>
+              <div id="tutor-debug" style="display: none;"></div>
+              <div id="tutor-retrieved-chunks-section" style="display: none;">
+                <div id="tutor-retrieved-chunks-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. MATERIALS TAB -->
+      <div class="tab-content" id="tab-materials">
+        <div class="grid-2">
+          <!-- Upload form & Material search -->
+          <div>
+            <div class="card" style="margin-bottom: 2rem;">
+              <h3 style="margin-bottom: 1rem;">Upload Materials</h3>
+              <form id="upload-file-form">
+                <div class="form-group">
+                  <input type="file" id="file-input" class="form-control" accept=".pdf,.txt,.md,.docx,.pptx,.png,.jpg,.jpeg" required style="padding: 0.4rem;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Upload Document / Syllabus</button>
+              </form>
+            </div>
+
+            <div class="card">
+              <h3 style="margin-bottom: 1rem;">Search Course Materials</h3>
+              <form id="search-materials-form">
+                <div class="form-group" style="display: flex; gap: 1rem; margin-bottom: 0;">
+                  <input type="text" id="search-query" class="form-control" placeholder="Search key concepts e.g. recursion, time complexity..." required style="flex: 2;">
+                  <select id="search-mode" class="form-control" style="width: 120px; background: var(--bg-card); color: var(--text-white); border: 1px solid var(--border-color);">
+                    <option value="hybrid">Hybrid</option>
+                    <option value="semantic">Semantic</option>
+                    <option value="keyword">Keyword</option>
+                  </select>
+                  <button type="submit" class="btn btn-secondary">Search</button>
+                </div>
+              </form>
+              
+              <!-- Search Results Box -->
+              <div id="search-results-box" style="display: none; margin-top: 1.5rem;">
+                <h4 style="color: var(--accent-cyan); margin-bottom: 1rem;">Top Search Matches</h4>
+                <div id="search-results-list" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Files list -->
+          <div class="card">
+            <h3 style="margin-bottom: 1rem;">Uploaded Files</h3>
+            <ul id="files-list" class="uploaded-files-list">
+              <!-- Files loaded dynamically -->
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. TOPICS TAB -->
+      <div class="tab-content" id="tab-topics">
+        <div class="card">
+          <h3 style="margin-bottom: 1rem;">Course Topics Map</h3>
+          <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 1.25rem;">Define course topics manually or run the AI agent to automatically discover and map them to your course files.</p>
+          <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <button id="extract-topics-btn" class="btn btn-primary">Extract Topics (AI)</button>
+            <button id="map-chunks-btn" class="btn btn-secondary">Update Chunk Mappings</button>
+          </div>
+          
+          <div id="extracted-topics-summary" style="display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-emerald); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--accent-emerald);"></div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 1rem; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.25rem;">Existing Topics</h4>
+            <div id="topics-list-container" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 350px; overflow-y: auto; padding-right: 0.5rem;">
+              <span style="color: var(--text-gray); font-size: 0.9rem;">No topics extracted yet. Click 'Extract Topics (AI)' to start.</span>
+            </div>
+          </div>
+
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1rem;">
+            <summary style="font-size: 0.9rem; font-weight: bold; cursor: pointer; color: var(--text-gray);">Add Topic Manually</summary>
+            <form id="add-topic-form" style="margin-top: 1rem;">
+              <div class="form-group">
+                <input type="text" id="manual-topic-name" class="form-control" placeholder="Topic Name (e.g. Binary Search Trees)" required style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              </div>
+              <div class="form-group" style="margin-top: 0.5rem;">
+                <textarea id="manual-topic-desc" class="form-control" placeholder="Description of the topic..." rows="2" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; width: 100%; border-radius: 6px; background: var(--bg-card); color: var(--text-white); border: 1px solid var(--border-color);"></textarea>
+              </div>
+              <button type="submit" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; margin-top: 0.5rem;">Create Topic</button>
+            </form>
+          </details>
+        </div>
+      </div>
+
+      <!-- 5. PRACTICE TAB -->
+      <div class="tab-content" id="tab-practice">
+        <div class="card">
+          <h3 style="margin-bottom: 1rem;">Practice Generator & Quizzes</h3>
+          <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 1.25rem;">Generate conceptual practice quizzes based on your course topics to test yourself and boost your mastery.</p>
+          
+          <form id="generate-practice-form" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; align-items: end; margin-bottom: 1.5rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 0.75rem;">Select Topic</label>
+              <select id="practice-topic-select" class="form-control" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" required>
+                <option value="">-- Choose a Topic --</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 0.75rem;">Difficulty</label>
+              <select id="practice-difficulty" class="form-control" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 0.75rem;">Count</label>
+              <input type="number" id="practice-count" class="form-control" value="3" min="1" max="10" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="grid-column: span 3; margin-top: 0.5rem;">Generate Quiz Questions</button>
+          </form>
+
+          <!-- Practice Quiz Area -->
+          <div id="practice-quiz-area" style="display: none; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+            <h4 style="color: var(--accent-cyan); margin-bottom: 1.25rem;">Active Quiz Practice</h4>
+            <div id="quiz-questions-list" style="display: flex; flex-direction: column; gap: 1.5rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. STUDY PLAN TAB -->
+      <div class="tab-content" id="tab-study-plan">
+        <div class="grid-2">
+          <!-- Left side: task generator & checklist -->
+          <div>
+            <div class="card" style="margin-bottom: 2rem;">
+              <h3 style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <span>📅 Weekly Study Planner</span>
+                <button id="generate-study-tasks-btn" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">Generate 7-Day Plan</button>
+              </h3>
+              <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 1.25rem;">Generated study plan actions based on your weakest course topics to optimize your study sessions.</p>
+              
+              <div id="study-tasks-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <span style="color: var(--text-gray); font-size: 0.9rem;">No tasks generated yet. Click 'Generate 7-Day Plan' to create tasks targeted to your weaknesses.</span>
+              </div>
+            </div>
+
+            <!-- Homework Checklist -->
+            <div class="card">
+              <h3 style="margin-bottom: 1.25rem;">Course Homework / Assignments Checklist</h3>
+              <div id="assignments-list">
+                <!-- Loaded dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side: Add assignment form & Study Reminders Generator -->
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="card">
+              <h3 style="margin-bottom: 1.25rem;">Add New Assignment</h3>
+              <form id="add-assignment-form">
+                <div class="form-group">
+                  <label class="form-label" style="font-size: 0.75rem;">Assignment Title</label>
+                  <input type="text" id="assign-title" class="form-control" placeholder="Lab Report 1" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" style="font-size: 0.75rem;">Details</label>
+                  <input type="text" id="assign-desc" class="form-control" placeholder="Write up section A & B">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" style="font-size: 0.75rem;">Due Date</label>
+                  <input type="date" id="assign-date" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-secondary" style="width: 100%;">Create Assignment</button>
+              </form>
+            </div>
+
+            <!-- Generating study reminders scaffold -->
+            <div class="card">
+              <h3 style="margin-bottom: 0.75rem;">Generate Study Reminders</h3>
+              <p style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 1.25rem;">Compile your assignments and study plan tasks into in-app notifications and alerts.</p>
+              <button id="btn-generate-reminders" class="btn btn-secondary" style="width: 100%;">Compile Alerts</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. EXAM PREP TAB -->
+      <div class="tab-content" id="tab-exam-prep">
+        <div class="card">
+          <h3 style="margin-bottom: 1rem;">Exam Study Planner</h3>
+          <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 1.25rem;">Generate tailored, day-by-day study schedules and sample conceptual practice questions for upcoming exams.</p>
+          <form id="generate-examprep-form">
+            <div class="grid-3" style="align-items: end; gap: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="exam-title" style="font-size: 0.75rem;">Exam Title</label>
+                <input type="text" id="exam-title" class="form-control" placeholder="Midterm Exam" required style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="exam-date" style="font-size: 0.75rem;">Exam Date</label>
+                <input type="date" id="exam-date" class="form-control" required style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="exam-topics" style="font-size: 0.75rem;">Core Topics (comma separated)</label>
+                <input type="text" id="exam-topics" class="form-control" placeholder="sorting, recursion, hashing" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-secondary" style="margin-top: 1.25rem;">Generate Prep Plan</button>
+          </form>
+
+          <!-- Exam Prep Response Box -->
+          <div id="ai-examprep-response-box" class="ai-response-card" style="display: none;">
+            <h4 id="prep-title" style="margin-bottom: 1rem; color: var(--accent-purple);">Exam Prep Plan</h4>
+            <div id="prep-warning-alert" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-rose); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--accent-rose);"></div>
+            
+            <h5 style="margin-top: 1.25rem; margin-bottom: 0.75rem;">Priority Focus Topics</h5>
+            <div id="prep-weaktopics" style="margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+
+            <h5 style="margin-bottom: 0.75rem;">Day-by-Day Study Schedule</h5>
+            <div id="prep-studyplan"></div>
+
+            <h5 style="margin-top: 1.25rem; margin-bottom: 0.75rem;">Recommended Practice Plan</h5>
+            <div id="prep-practice-plan" style="margin-bottom: 1rem;"></div>
+
+            <h5 style="margin-top: 1.25rem; margin-bottom: 0.75rem;">Review Strategy</h5>
+            <div id="prep-review-strategy" style="white-space: pre-line; line-height: 1.5; font-size: 0.9rem; color: var(--text-gray); margin-bottom: 1.25rem;"></div>
+
+            <div id="prep-questions" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. FLASHCARDS TAB -->
+      <div class="tab-content" id="tab-flashcards">
+        <div class="card">
+          <h3 style="margin-bottom: 1rem;">Study Flashcards</h3>
+          <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 1.25rem;">Generate study cards dynamically based on course topics and practice memory recall in interactive 3D.</p>
+          <form id="generate-flashcards-form" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap; margin-bottom: 1.5rem;">
+            <div class="form-group" style="flex: 2; margin-bottom: 0; min-width: 200px;">
+              <label class="form-label" for="flashcard-topic" style="font-size: 0.75rem;">Topic</label>
+              <input type="text" id="flashcard-topic" class="form-control" placeholder="e.g. Heap Sort or Dynamic Programming" required style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+            </div>
+            <div class="form-group" style="flex: 1; margin-bottom: 0; min-width: 100px;">
+              <label class="form-label" for="flashcard-count" style="font-size: 0.75rem;">Count</label>
+              <input type="number" id="flashcard-count" class="form-control" value="5" min="2" max="20" required style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+            </div>
+            <button type="submit" class="btn btn-secondary">Generate Flashcards</button>
+          </form>
+
+          <!-- Flashcards list -->
+          <div id="flashcards-list" class="flashcards-container">
+            <!-- Loaded dynamically -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 NaySchool 3.0. Built for student-first productivity.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
