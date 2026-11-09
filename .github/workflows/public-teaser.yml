@@ -1,0 +1,24 @@
+name: Validate public NaySchool preview
+on:
+  push:
+    branches: [feature/teaser-electric-fields-api-nov2026]
+  pull_request:
+    paths:
+      - 'backend/routers/public_lessons.py'
+      - 'backend/main.py'
+      - 'tests/test_public_lessons.py'
+      - '.github/workflows/public-teaser.yml'
+jobs:
+  public-preview-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install minimal test dependencies
+        run: pip install 'fastapi>=0.110,<1' 'httpx>=0.26,<1' 'pytest>=8,<10'
+      - name: Run public lesson API contract tests
+        run: python -m pytest -q tests/test_public_lessons.py
+      - name: Parse FastAPI entrypoint
+        run: python -m compileall -q backend/main.py backend/routers/public_lessons.py

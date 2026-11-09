@@ -24,7 +24,8 @@ from backend.routers import (
     learning_dashboard,
     user_profile,
     student_home,
-    notifications
+    notifications,
+    public_lessons
 )
 
 @asynccontextmanager
@@ -73,6 +74,7 @@ app.include_router(learning_dashboard.router, prefix="/api")
 app.include_router(user_profile.router, prefix="/api")
 app.include_router(student_home.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
+app.include_router(public_lessons.router, prefix="/api")
 
 # ─── Frontend Serving ─────────────────────────────────────────────
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
